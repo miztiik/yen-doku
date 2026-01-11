@@ -24,7 +24,11 @@ const state = {
     selected: null,
     pencilMode: false,
     difficulty: 'extreme',
+    startTime: null,
 };
+
+// ===== Storage Keys =====
+const STORAGE_KEY = 'yendoku_game';
 
 // ===== DOM =====
 const $ = (sel) => document.querySelector(sel);
@@ -54,6 +58,66 @@ const el = {
 // ===== Utils =====
 const today = () => new Date().toISOString().split('T')[0];
 const year = (d) => d.split('-')[0];
+
+// Get yesterday's date
+function yesterday(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    d.setDate(d.getDate() - 1);
+    return d.toISOString().split('T')[0];
+}
+
+// ===== LocalStorage Persistence =====
+function saveGame() {
+    if (!state.puzzle) return;
+    
+    const saveData = {
+        date: state.puzzle.date,
+        difficulty: state.difficulty,
+        grid: state.grid,
+        pencil: state.pencil.map(row => row.map(set => [...set])),
+        history: state.history.map(h => ({
+            grid: h.grid,
+            pencil: h.pencil.map(row => row.map(set => [...set]))
+        })),
+        startTime: state.startTime,
+        savedAt: Date.now()
+    };
+    
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
+    } catch (e) {
+        console.warn('Failed to save game:', e);
+    }
+}
+
+function loadSavedGame() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return null;
+        
+        const data = JSON.parse(saved);
+        
+        // Restore pencil marks as Sets
+        data.pencil = data.pencil.map(row => row.map(arr => new Set(arr)));
+        data.history = data.history.map(h => ({
+            grid: h.grid,
+            pencil: h.pencil.map(row => row.map(arr => new Set(arr)))
+        }));
+        
+        return data;
+    } catch (e) {
+        console.warn('Failed to load saved game:', e);
+        return null;
+    }
+}
+
+function clearSavedGame() {
+    try {
+        localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {
+        console.warn('Failed to clear saved game:', e);
+    }
+}
 
 // Puzzles path - works for both local dev and GitHub Pages
 function path(date, diff) {
@@ -150,9 +214,10 @@ function validatePuzzle(puzzle) {
  * Core puzzle loading logic.
  * @param {string} date - Date in YYYY-MM-DD format
  * @param {string} difficulty - Difficulty level
- * @param {boolean} fallbackToToday - If true, fallback to today's date on failure
+ * @param {number} retryCount - Number of fallback attempts (try yesterday recursively)
  */
-async function loadPuzzle(date, difficulty, fallbackToToday = false) {
+async function loadPuzzle(date, difficulty, retryCount = 0) {
+    const MAX_RETRIES = 7; // Try up to a week back
     const puzzlePath = path(date, difficulty);
     console.log('Loading puzzle from:', puzzlePath);
     
@@ -176,6 +241,7 @@ async function loadPuzzle(date, difficulty, fallbackToToday = false) {
         state.history = [];
         state.selected = null;
         state.difficulty = difficulty;
+        state.startTime = Date.now();
         
         el.date.textContent = formatDate(puzzle.date);
         el.error.classList.add('hidden');
@@ -183,25 +249,67 @@ async function loadPuzzle(date, difficulty, fallbackToToday = false) {
         updateTabs();
         render();
         updateURL();
+        saveGame(); // Save initial state
     } catch (e) {
         console.error('Failed to load puzzle:', e);
         el.grid.classList.remove('loading');
         
-        // Fallback to today if loading a specific date failed
-        if (fallbackToToday && date !== today()) {
-            console.log('Falling back to today\'s puzzle');
-            loadPuzzle(today(), difficulty, false);
+        // Fallback to previous day if available
+        if (retryCount < MAX_RETRIES) {
+            const prevDate = yesterday(date);
+            console.log(`Falling back to ${prevDate}`);
+            loadPuzzle(prevDate, difficulty, retryCount + 1);
             return;
         }
         
-        el.error.textContent = 'No puzzle available. Check back after midnight UTC.';
+        el.error.textContent = 'No puzzle available. Check back later.';
         el.error.classList.remove('hidden');
         el.grid.innerHTML = '';
     }
 }
 
 async function load(difficulty) {
-    return loadPuzzle(today(), difficulty, false);
+    // Check for saved game for today's puzzle at this difficulty
+    const saved = loadSavedGame();
+    if (saved && saved.date === today() && saved.difficulty === difficulty) {
+        console.log('Resuming saved game');
+        return resumeGame(saved);
+    }
+    return loadPuzzle(today(), difficulty, 0);
+}
+
+/**
+ * Resume a saved game from localStorage
+ */
+async function resumeGame(saved) {
+    const puzzlePath = path(saved.date, saved.difficulty);
+    
+    try {
+        const res = await fetch(puzzlePath);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const puzzle = await res.json();
+        validatePuzzle(puzzle);
+        
+        state.puzzle = puzzle;
+        state.grid = saved.grid;
+        state.pencil = saved.pencil;
+        state.history = saved.history;
+        state.selected = null;
+        state.difficulty = saved.difficulty;
+        state.startTime = saved.startTime;
+        
+        el.date.textContent = formatDate(puzzle.date);
+        el.error.classList.add('hidden');
+        updateTabs();
+        render();
+        updateURL();
+        
+        toast('Game resumed');
+    } catch (e) {
+        console.error('Failed to resume, loading fresh:', e);
+        clearSavedGame();
+        loadPuzzle(today(), saved.difficulty, 0);
+    }
 }
 
 function formatDate(dateStr) {
@@ -224,9 +332,15 @@ function updateURL() {
     history.replaceState({}, '', url);
 }
 
-// Load a specific date's puzzle (with fallback to today)
+// Load a specific date's puzzle (with fallback to previous dates)
 async function loadWithDate(date, difficulty) {
-    return loadPuzzle(date, difficulty, true);
+    // Check for saved game for this specific puzzle
+    const saved = loadSavedGame();
+    if (saved && saved.date === date && saved.difficulty === difficulty) {
+        console.log('Resuming saved game for', date);
+        return resumeGame(saved);
+    }
+    return loadPuzzle(date, difficulty, 0);
 }
 
 // ===== Render =====
@@ -375,6 +489,7 @@ function enter(num) {
     }
     
     render();
+    saveGame();
     checkWin();
 }
 
@@ -387,6 +502,7 @@ function erase() {
     state.grid[row][col] = 0;
     state.pencil[row][col].clear();
     render();
+    saveGame();
 }
 
 function saveHistory() {
@@ -406,6 +522,7 @@ function undo() {
     state.grid = prev.grid;
     state.pencil = prev.pencil;
     render();
+    saveGame();
 }
 
 function togglePencil() {
@@ -435,6 +552,7 @@ function hint() {
     state.selected = { row, col };
     
     render();
+    saveGame();
     
     // Animate
     const cells = el.grid.querySelectorAll('.cell');
@@ -497,6 +615,7 @@ function checkWin() {
     }
     
     // 🎉 VICTORY! Trigger celebration
+    clearSavedGame(); // Puzzle complete, clear saved state
     celebrateWin();
 }
 
@@ -641,6 +760,8 @@ function doReset() {
     );
     state.history = [];
     state.selected = null;
+    state.startTime = Date.now();
+    clearSavedGame();
     render();
     toast('Puzzle reset');
 }

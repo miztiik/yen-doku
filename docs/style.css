@@ -1114,3 +1114,37 @@ main {
         animation: none;
     }
 }
+
+/* ===== Footer ===== */
+.site-footer {
+    margin-top: var(--space-xl);
+    padding: var(--space-md) 0;
+    text-align: center;
+}
+
+.repo-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-tertiary);
+    text-decoration: none;
+    border-radius: var(--radius-full);
+    background: var(--bg-secondary);
+    transition: all 0.2s var(--ease);
+}
+
+.repo-link:hover {
+    color: var(--text-secondary);
+    background: var(--bg-tertiary);
+}
+
+.repo-link svg {
+    opacity: 0.7;
+}
+
+.repo-link:hover svg {
+    opacity: 1;
+}

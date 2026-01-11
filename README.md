@@ -1,52 +1,37 @@
 # Yen-Doku 🧩
 
-A delightful daily Sudoku puzzle game with a premium, Apple-inspired UI.
+A delightful daily Sudoku puzzle game — vibe-coded with AI.
 
-![Yen-Doku](https://img.shields.io/badge/Sudoku-Daily-7c3aed)
+[![Daily Puzzle Generation](https://github.com/miztiik/yen-doku/actions/workflows/daily-generate.yml/badge.svg)](https://github.com/miztiik/yen-doku/actions/workflows/daily-generate.yml)
+[![Deploy to GitHub Pages](https://github.com/miztiik/yen-doku/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/miztiik/yen-doku/actions/workflows/deploy-pages.yml)
 ![Python](https://img.shields.io/badge/Python-3.11+-22c55e)
 ![Vibe Coded](https://img.shields.io/badge/Vibe-Coded%20✨-ff6b6b)
-![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen)
-![License](https://img.shields.io/badge/License-MIT-yellow)
-
-> 🎨 **Vibe-coded with AI** — This project was built collaboratively with GitHub Copilot, embracing the joy of coding through conversation. PRs and contributions welcome!
 
 ## ✨ Features
 
-### Core Gameplay
 - 🎲 **Daily Puzzles** — Fresh puzzles generated every day at midnight UTC
 - 🎯 **4 Difficulty Levels** — Easy, Medium, Hard, Extreme
 - ✅ **Guaranteed Unique Solutions** — Every puzzle has exactly one solution
 - 📅 **Calendar Picker** — Play any past puzzle
-
-### Premium UX
-- 🎉 **Victory Celebration** — Confetti, staggered cell animations & modal on completion
 - ✏️ **Notes Mode** — Pencil marks for advanced solving
-- 🔍 **Smart Highlighting** — Related cells, conflicts, and same-number highlighting
 - 💡 **Hints** — Reveal a correct cell when stuck
-- ✓ **Check Progress** — Validate entries without revealing answers
-
-### Design
 - 🌓 **Dark/Light Themes** — System-aware with manual toggle
-- 📱 **Fully Responsive** — Mobile-first, touch-friendly
-- ⌨️ **Keyboard Navigation** — Arrow keys, number input, shortcuts
-- ♿ **Accessible** — ARIA labels, focus states, semantic HTML
-- 🎨 **Apple HIG Inspired** — Clean typography, subtle gradients, smooth animations
 
 ## Live Demo
 
-Visit: **[miztiik.github.io/yen-doku](https://miztiik.github.io/yen-doku/)**
+**▶ [Play Now → miztiik.github.io/yen-doku](https://miztiik.github.io/yen-doku/)**
 
 ## How It Works
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  GitHub Actions │────▶│  puzzles/*.json │────▶│  GitHub Pages   │
+│  GitHub Actions │───▶│  puzzles/*.json │────▶│  GitHub Pages   │
 │  (Daily @ UTC)  │     │  (4 per day)    │     │  (Static Site)  │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
 ```
 
 1. **Generation**: Python scripts create puzzles with guaranteed unique solutions
-2. **Storage**: Puzzles saved as JSON in `puzzles/<year>/<difficulty>/YYYY-MM-DD.json`
+2. **Storage**: Puzzles saved as JSON in `docs/puzzles/<year>/<difficulty>/YYYY-MM-DD.json`
 3. **Serving**: Static site fetches and renders puzzles client-side
 
 ## Difficulty Levels
@@ -139,7 +124,7 @@ yen-doku/
 │   ├── test_difficulty.py
 │   └── test_generate.py
 │
-├── objective.md            # System design spec
+├── system-design.md        # Architecture & constraints
 ├── requirements.txt
 └── README.md
 ```
@@ -167,44 +152,29 @@ yen-doku/
 
 ## Contributing
 
-Contributions are **warmly welcome**! This project was vibe-coded and thrives on community input.
+Contributions welcome! This project thrives on community input.
 
 ```bash
-# Fork → Clone → Branch → Code → PR
 git checkout -b feature/your-idea
 ```
 
-**Ideas welcome:**
+**Ideas:**
 - 🎨 UI/UX improvements
 - 🧩 New puzzle variants
 - ⚡ Performance optimizations
 - 📱 PWA enhancements
-- 🌍 Internationalization
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | Vanilla HTML/CSS/JS (no frameworks!) |
-| Backend | Python 3.11 (GitHub Actions only) |
-| Hosting | GitHub Pages (free tier) |
-| CI/CD | GitHub Actions |
+| Frontend | Vanilla HTML/CSS/JS |
+| Backend | Python 3.11 (GitHub Actions) |
+| Hosting | GitHub Pages |
 | Fonts | Nunito, Outfit, Josefin Sans |
-
-## License
-
-MIT License — see [LICENSE](LICENSE) for details.
-
-## Credits
-
-Built with ❤️ and AI:
-- 🤖 [GitHub Copilot](https://github.com/features/copilot) — Vibe coding partner
-- 🧩 [py-sudoku](https://github.com/jeffsieu/py-sudoku) — Initial grid generation
-- 🎨 [Apple HIG](https://developer.apple.com/design/human-interface-guidelines/) — Design inspiration
 
 ---
 
 <p align="center">
-  <strong>Made with 🎯 focus and ✨ vibes</strong><br>
   <a href="https://miztiik.github.io/yen-doku/">Play Now →</a>
 </p>

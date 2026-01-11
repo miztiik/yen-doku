@@ -104,7 +104,7 @@ yen-doku/
 │   ├── test_difficulty.py
 │   └── test_generate.py
 │
-├── objective.md              # This file — system design spec
+├── system-design.md          # This file — architecture & constraints
 ├── requirements.txt
 ├── README.md
 └── .gitignore

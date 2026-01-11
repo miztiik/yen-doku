@@ -3,7 +3,7 @@
 **Feature Branch**: `core-sudoku-system`  
 **Created**: 2026-01-11  
 **Status**: ✅ Implemented  
-**Input**: User description from `objective.md`  
+**System Design**: [system-design.md](../../../system-design.md) — Architecture & constraints  
 **Design System**: [design-system.md](design-system.md) — Typography, colors, animations  
 **Checklist**: [checklist.md](checklist.md) — Implementation progress
 
