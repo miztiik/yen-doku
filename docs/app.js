@@ -447,6 +447,7 @@ function hint() {
 function check() {
     let correct = 0, incorrect = 0, empty = 0;
     const cells = el.grid.querySelectorAll('.cell');
+    const markedCells = [];
     
     for (let r = 0; r < 9; r++) {
         for (let c = 0; c < 9; c++) {
@@ -460,18 +461,26 @@ function check() {
                 empty++;
             } else if (val === sol) {
                 correct++;
-                cell.classList.add('correct');
+                // Only mark incorrect cells - don't reveal correct ones
             } else {
                 incorrect++;
                 cell.classList.add('incorrect');
+                markedCells.push(cell);
             }
         }
+    }
+    
+    // Remove incorrect markers after 2 seconds
+    if (markedCells.length > 0) {
+        setTimeout(() => {
+            markedCells.forEach(cell => cell.classList.remove('incorrect'));
+        }, 2000);
     }
     
     if (incorrect === 0 && empty === 0) {
         toast('🎉 Perfect!', 'success');
     } else if (incorrect === 0) {
-        toast(`${empty} cells remaining`);
+        toast(`✓ All ${correct} entries correct · ${empty} remaining`);
     } else {
         toast(`${incorrect} incorrect`, 'error');
     }
