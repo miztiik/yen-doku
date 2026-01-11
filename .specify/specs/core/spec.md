@@ -2,8 +2,10 @@
 
 **Feature Branch**: `core-sudoku-system`  
 **Created**: 2026-01-11  
-**Status**: Draft  
-**Input**: User description from `objective.md`
+**Status**: ✅ Implemented  
+**Input**: User description from `objective.md`  
+**Design System**: [design-system.md](design-system.md) — Typography, colors, animations  
+**Checklist**: [checklist.md](checklist.md) — Implementation progress
 
 ---
 
@@ -69,12 +71,15 @@ As a solver, I can click a "Check" button to validate my current entries against
 
 **Independent Test**: Fill some cells correctly and some incorrectly; click "Check"; verify incorrect cells are highlighted.
 
+**⚠️ CRITICAL UX DECISION**: Check button does **NOT** reveal correct answers (no green highlighting). This preserves the solving experience — check is for catching mistakes only.
+
 **Acceptance Scenarios**:
 
-1. **Given** I have filled some cells, **When** I click "Check", **Then** cells matching the solution are marked as correct (green)
-2. **Given** I have filled some cells incorrectly, **When** I click "Check", **Then** incorrect cells are highlighted (red)
-3. **Given** all my entries are correct but puzzle is incomplete, **When** I click "Check", **Then** I see "Looking good so far!" message
-4. **Given** I click "Check", **When** validation runs, **Then** pre-filled clue cells are not affected
+1. **Given** I have filled some cells incorrectly, **When** I click "Check", **Then** incorrect cells are highlighted red temporarily (1.5s)
+2. **Given** all my entries are correct but puzzle is incomplete, **When** I click "Check", **Then** I see "Looking good! X left" message
+3. **Given** I have made no entries, **When** I click "Check", **Then** I see "X cells to go" message
+4. **Given** I click "Check", **When** validation runs, **Then** correct cells are **NOT** highlighted green (preserves solving experience)
+5. **Given** all cells are filled correctly, **When** I click "Check", **Then** victory celebration triggers
 
 ---
 
