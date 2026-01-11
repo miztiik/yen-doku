@@ -27,11 +27,6 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
-      - name: Prepare deployment
-        run: |
-          # Copy puzzles into docs so they're served together
-          cp -r puzzles docs/puzzles
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

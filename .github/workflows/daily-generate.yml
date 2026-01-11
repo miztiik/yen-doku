@@ -45,7 +45,7 @@ jobs:
 
       - name: Generate puzzles for all difficulties
         run: |
-          python scripts/generate.py ${{ steps.date.outputs.date }} --skip-existing
+          python scripts/generate.py ${{ steps.date.outputs.date }} --skip-existing --output docs/puzzles
 
       - name: Validate generated puzzles
         run: |
@@ -63,7 +63,7 @@ jobs:
           errors = []
 
           for diff in ['easy', 'medium', 'hard', 'extreme']:
-              path = Path(f'puzzles/{year}/{diff}/{date}.json')
+              path = Path(f'docs/puzzles/{year}/{diff}/{date}.json')
               if not path.exists():
                   errors.append(f'{diff}: File not found at {path}')
                   continue
