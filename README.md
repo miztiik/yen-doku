@@ -1,21 +1,36 @@
-Yen-Dokuasdf
+# Yen-Doku 🧩
 
-A daily Sudoku puzzle generator and interactive web player.
+A delightful daily Sudoku puzzle game with a premium, Apple-inspired UI.
 
-![Yen-Doku](https://img.shields.io/badge/Sudoku-Daily-blue)
-![Python](https://img.shields.io/badge/Python-3.11+-green)
+![Yen-Doku](https://img.shields.io/badge/Sudoku-Daily-7c3aed)
+![Python](https://img.shields.io/badge/Python-3.11+-22c55e)
+![Vibe Coded](https://img.shields.io/badge/Vibe-Coded%20✨-ff6b6b)
+![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-## Features
+> 🎨 **Vibe-coded with AI** — This project was built collaboratively with GitHub Copilot, embracing the joy of coding through conversation. PRs and contributions welcome!
 
-- 🎲 **Daily Puzzles**: New puzzles generated automatically every day at midnight UTC
-- 🎯 **4 Difficulty Levels**: Easy, Medium, Hard, Extreme
-- ✅ **Guaranteed Unique Solutions**: Every puzzle has exactly one solution
-- 📱 **Mobile Friendly**: Touch-friendly interface with responsive design
-- ⌨️ **Keyboard Support**: Navigate with arrows, enter numbers 1-9
-- ✏️ **Notes Mode**: Pencil marks for advanced solving techniques
-- 🔍 **Conflict Highlighting**: See duplicates in rows, columns, and boxes
-- ✨ **Modern UI**: Clean, intuitive design
+## ✨ Features
+
+### Core Gameplay
+- 🎲 **Daily Puzzles** — Fresh puzzles generated every day at midnight UTC
+- 🎯 **4 Difficulty Levels** — Easy, Medium, Hard, Extreme
+- ✅ **Guaranteed Unique Solutions** — Every puzzle has exactly one solution
+- 📅 **Calendar Picker** — Play any past puzzle
+
+### Premium UX
+- 🎉 **Victory Celebration** — Confetti, staggered cell animations & modal on completion
+- ✏️ **Notes Mode** — Pencil marks for advanced solving
+- 🔍 **Smart Highlighting** — Related cells, conflicts, and same-number highlighting
+- 💡 **Hints** — Reveal a correct cell when stuck
+- ✓ **Check Progress** — Validate entries without revealing answers
+
+### Design
+- 🌓 **Dark/Light Themes** — System-aware with manual toggle
+- 📱 **Fully Responsive** — Mobile-first, touch-friendly
+- ⌨️ **Keyboard Navigation** — Arrow keys, number input, shortcuts
+- ♿ **Accessible** — ARIA labels, focus states, semantic HTML
+- 🎨 **Apple HIG Inspired** — Clean typography, subtle gradients, smooth animations
 
 ## Live Demo
 
@@ -96,28 +111,35 @@ python -m http.server 8080
 ```
 yen-doku/
 ├── .github/workflows/
-│   ├── daily-generate.yml  # Daily puzzle generation
-│   └── ci.yml              # Test on push/PR
-├── puzzles/
-│   └── 2026/
-│       ├── easy/
-│       ├── medium/
-│       ├── hard/
-│       └── extreme/
+│   ├── daily-generate.yml  # Daily puzzle generation (00:05 UTC)
+│   └── deploy-pages.yml    # GitHub Pages deployment
+│
+├── docs/                    # ← GitHub Pages root
+│   ├── index.html          # Main page
+│   ├── style.css           # Styling (1100+ lines)
+│   ├── app.js              # Client logic (750+ lines)
+│   ├── sw.js               # Service Worker (offline support)
+│   └── puzzles/            # Puzzle JSON files
+│       └── 2026/
+│           ├── easy/
+│           ├── medium/
+│           ├── hard/
+│           ├── extreme/
+│           └── index.json  # Yearly puzzle index
+│
 ├── scripts/
+│   ├── generate.py         # Puzzle generator CLI
 │   ├── solver.py           # Backtracking solver
 │   ├── validator.py        # Grid validation
-│   ├── difficulty.py       # Difficulty scoring
-│   └── generate.py         # Puzzle generator CLI
-├── docs/
-│   ├── index.html          # Main page
-│   ├── style.css           # Styling
-│   └── app.js              # Client-side logic
+│   └── difficulty.py       # Difficulty scoring
+│
 ├── tests/
 │   ├── test_solver.py
 │   ├── test_validator.py
 │   ├── test_difficulty.py
 │   └── test_generate.py
+│
+├── objective.md            # System design spec
 ├── requirements.txt
 └── README.md
 ```
@@ -145,18 +167,44 @@ yen-doku/
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
+Contributions are **warmly welcome**! This project was vibe-coded and thrives on community input.
+
+```bash
+# Fork → Clone → Branch → Code → PR
+git checkout -b feature/your-idea
+```
+
+**Ideas welcome:**
+- 🎨 UI/UX improvements
+- 🧩 New puzzle variants
+- ⚡ Performance optimizations
+- 📱 PWA enhancements
+- 🌍 Internationalization
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Frontend | Vanilla HTML/CSS/JS (no frameworks!) |
+| Backend | Python 3.11 (GitHub Actions only) |
+| Hosting | GitHub Pages (free tier) |
+| CI/CD | GitHub Actions |
+| Fonts | Nunito, Outfit, Josefin Sans |
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License — see [LICENSE](LICENSE) for details.
 
 ## Credits
 
-Built with ❤️ using:
-- [py-sudoku](https://github.com/jeffsieu/py-sudoku) for initial grid generation
-- Custom backtracking solver for unique solution guarantee
+Built with ❤️ and AI:
+- 🤖 [GitHub Copilot](https://github.com/features/copilot) — Vibe coding partner
+- 🧩 [py-sudoku](https://github.com/jeffsieu/py-sudoku) — Initial grid generation
+- 🎨 [Apple HIG](https://developer.apple.com/design/human-interface-guidelines/) — Design inspiration
+
+---
+
+<p align="center">
+  <strong>Made with 🎯 focus and ✨ vibes</strong><br>
+  <a href="https://miztiik.github.io/yen-doku/">Play Now →</a>
+</p>

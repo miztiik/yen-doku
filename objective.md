@@ -70,52 +70,58 @@ No external APIs, databases, or paid services are allowed.
 ### 4. Repository Structure (Canonical)
 
 ```
-sudoku-daily/
+yen-doku/
 ├── .github/workflows/
-│   └── daily-generate.yml
+│   ├── daily-generate.yml    # Cron: 00:05 UTC daily
+│   └── deploy-pages.yml      # Triggered on push to master
 │
-├── puzzles/
-│   ├── 2026/
-│   │   ├── easy/
-│   │   │   └── 2026-01-10.json
-│   │   ├── medium/
-│   │   │   └── 2026-01-10.json
-│   │   ├── hard/
-│   │   │   └── 2026-01-10.json
-│   │   ├── extreme/
-│   │   │   └── 2026-01-10.json
-│   │   └── index.json
-│   └── README.md
+├── docs/                      # ← GitHub Pages serves from here
+│   ├── index.html
+│   ├── app.js                # ~750 lines, client game logic
+│   ├── style.css             # ~1100 lines, Apple HIG-inspired
+│   ├── sw.js                 # Service Worker for offline
+│   └── puzzles/              # ← Puzzles inside docs for Pages
+│       └── 2026/
+│           ├── easy/
+│           │   └── 2026-01-11.json
+│           ├── medium/
+│           │   └── 2026-01-11.json
+│           ├── hard/
+│           │   └── 2026-01-11.json
+│           ├── extreme/
+│           │   └── 2026-01-11.json
+│           └── index.json    # Yearly navigation index
 │
 ├── scripts/
-│   ├── generate.py
-│   ├── solver.py
-│   ├── validator.py
-│   └── difficulty.py
-│
-├── docs/
-│   ├── index.html
-│   ├── app.js
-│   └── style.css
+│   ├── generate.py           # CLI: --max-retries, --verbose, --no-index
+│   ├── solver.py             # Backtracking with count_solutions()
+│   ├── validator.py          # Sudoku rule validation
+│   └── difficulty.py         # Clue count → difficulty mapping
 │
 ├── tests/
 │   ├── test_solver.py
-│   └── test_validator.py
+│   ├── test_validator.py
+│   ├── test_difficulty.py
+│   └── test_generate.py
 │
+├── objective.md              # This file — system design spec
 ├── requirements.txt
 ├── README.md
 └── .gitignore
 ```
 
+> **Note:** Puzzles are stored inside `/docs/puzzles/` so GitHub Pages can serve them directly without copy steps.
+
 ---
 
 ### 5. Puzzle Storage Rules
 
-* Puzzles are stored under `/puzzles/<year>/<difficulty>/`
+* Puzzles are stored under `/docs/puzzles/<year>/<difficulty>/`
 * **One JSON file per day per difficulty level**
-* Folder structure: `puzzles/<year>/<difficulty>/YYYY-MM-DD.json`
+* Folder structure: `docs/puzzles/<year>/<difficulty>/YYYY-MM-DD.json`
 * Year and difficulty folders must be created automatically if missing
-* A yearly `index.json` may be generated for navigation (optional)
+* A yearly `index.json` is generated for calendar navigation
+* Storing in `/docs` allows GitHub Pages to serve puzzles directly
 
 ---
 
@@ -174,18 +180,57 @@ If validation fails:
 ### 9. UI Rules (GitHub Pages)
 
 * UI is a **pure consumer** of JSON data
-* Fetches puzzle files via relative paths
+* Fetches puzzle files via relative paths (`./puzzles/<year>/<difficulty>/<date>.json`)
 * Never assumes directory listing is available
 * Does not generate, validate, or mutate puzzles
-* Optional features:
-
-  * Input validation
-  * Hints
-  * Solution reveal
 
 ---
 
-### 10. Explicit Non-Goals
+### 10. UI/UX Design (Apple HIG Inspired)
+
+The frontend follows **Apple Human Interface Guidelines** principles:
+
+#### Typography
+* **Josefin Sans** — Logo/brand
+* **Nunito** — UI elements, buttons, labels
+* **Outfit** — Grid numbers (monospace for alignment)
+
+#### Color System (CSS Custom Properties)
+* Light mode: Clean whites with subtle gradient background
+* Dark mode: Deep slate with purple accents
+* Accent: `#7c3aed` (purple) for interactive elements
+* Semantic: Green (success), Amber (warning), Red (error)
+
+#### Interaction Patterns
+* **Cell Selection** — Highlight selected + related cells (row, column, box)
+* **Number Highlighting** — Same numbers glow across grid
+* **Conflict Detection** — Red highlight for rule violations
+* **Notes Mode** — Toggle for pencil marks (smaller 3×3 grid per cell)
+
+#### Feedback & Celebration
+* **Toast Notifications** — Non-blocking, auto-dismiss (3s)
+* **Check Button** — Highlights errors temporarily (1.5s), doesn't reveal correct answers
+* **Victory Celebration**:
+  * Staggered green fill animation on all cells
+  * Confetti particle system (50 pieces, 3s duration)
+  * Modal with time display and share option
+  * Triggered only on genuine completion, not on hint/check
+
+#### Accessibility
+* ARIA labels on all interactive elements
+* Focus-visible states for keyboard navigation
+* Minimum 44×44px touch targets
+* Color contrast meets WCAG AA
+
+#### Responsive Design
+* Mobile-first CSS
+* Grid scales proportionally (max 400px)
+* Bottom action bar on mobile
+* No horizontal scroll
+
+---
+
+### 11. Explicit Non-Goals
 
 The system must **not** include:
 
@@ -198,7 +243,7 @@ The system must **not** include:
 
 ---
 
-### 11. Design Philosophy
+### 12. Design Philosophy
 
 * Prefer clarity over abstraction
 * Prefer files over services
@@ -208,7 +253,7 @@ The system must **not** include:
 
 ---
 
-### 12. Success Criteria
+### 13. Success Criteria
 
 The system is considered correct if:
 
@@ -216,6 +261,13 @@ The system is considered correct if:
 * Each puzzle has exactly one solution
 * The puzzle renders correctly on GitHub Pages
 * The system operates indefinitely without manual intervention
+
+---
+
+### 14. Development Notes
+
+> 🎨 **Vibe-coded with AI** — This project was built collaboratively with GitHub Copilot.
+> Contributions and PRs are warmly welcome!
 
 ---
 
