@@ -477,12 +477,15 @@ function check() {
         }, 2000);
     }
     
+    // Smart messaging
     if (incorrect === 0 && empty === 0) {
-        toast('🎉 Perfect!', 'success');
-    } else if (incorrect === 0) {
-        toast(`✓ All ${correct} entries correct · ${empty} remaining`);
-    } else {
+        // Puzzle complete - celebration handles this
+    } else if (incorrect > 0) {
         toast(`${incorrect} incorrect`, 'error');
+    } else if (correct === 0) {
+        toast(`${empty} cells to go`);
+    } else {
+        toast(`Looking good! ${empty} left`);
     }
 }
 
