@@ -483,7 +483,113 @@ function checkWin() {
             if (state.grid[r][c] !== state.puzzle.solution[r][c]) return;
         }
     }
-    toast('🎉 Congratulations!', 'success');
+    
+    // 🎉 VICTORY! Trigger celebration
+    celebrateWin();
+}
+
+// ===== Celebration =====
+function celebrateWin() {
+    const cells = el.grid.querySelectorAll('.cell');
+    
+    // 1. Staggered green reveal for user-added cells
+    let delay = 0;
+    for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+            const cell = cells[r * 9 + c];
+            const isUserCell = state.puzzle.grid[r][c] === 0;
+            
+            if (isUserCell) {
+                setTimeout(() => {
+                    cell.classList.add('victory');
+                }, delay);
+                delay += 30; // Staggered animation
+            }
+        }
+    }
+    
+    // 2. Launch confetti
+    setTimeout(() => {
+        createConfetti();
+    }, 200);
+    
+    // 3. Show victory modal after cells animate
+    setTimeout(() => {
+        showVictoryModal();
+    }, delay + 500);
+}
+
+function createConfetti() {
+    const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+    const container = document.createElement('div');
+    container.className = 'confetti-container';
+    document.body.appendChild(container);
+    
+    for (let i = 0; i < 150; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.animationDelay = Math.random() * 3 + 's';
+        confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+        
+        // Random shapes
+        if (Math.random() > 0.5) {
+            confetti.style.borderRadius = '50%';
+        }
+        
+        container.appendChild(confetti);
+    }
+    
+    // Clean up after animation
+    setTimeout(() => container.remove(), 6000);
+}
+
+function showVictoryModal() {
+    // Calculate stats
+    const userCells = 81 - state.puzzle.grid.flat().filter(x => x !== 0).length;
+    const difficulty = state.difficulty.charAt(0).toUpperCase() + state.difficulty.slice(1);
+    
+    const content = `
+        <div class="victory-content">
+            <div class="victory-icon">🏆</div>
+            <h2 class="victory-title">Puzzle Complete!</h2>
+            <div class="victory-stats">
+                <div class="stat">
+                    <span class="stat-value">${difficulty}</span>
+                    <span class="stat-label">Difficulty</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">${userCells}</span>
+                    <span class="stat-label">Cells Solved</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">${state.puzzle.date}</span>
+                    <span class="stat-label">Date</span>
+                </div>
+            </div>
+            <button class="victory-btn" onclick="closeVictoryModal()">Continue</button>
+        </div>
+    `;
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'victory-overlay';
+    overlay.id = 'victory-modal';
+    overlay.innerHTML = content;
+    document.body.appendChild(overlay);
+    
+    // Animate in
+    requestAnimationFrame(() => {
+        overlay.classList.add('visible');
+    });
+}
+
+function closeVictoryModal() {
+    const overlay = document.getElementById('victory-modal');
+    if (overlay) {
+        overlay.classList.remove('visible');
+        setTimeout(() => overlay.remove(), 300);
+    }
 }
 
 function reset() {
