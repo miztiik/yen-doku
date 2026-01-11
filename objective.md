@@ -60,7 +60,7 @@ Correctness, determinism, and simplicity take priority over cleverness.
   * Commits results to the repository
 * **GitHub Pages**
 
-  * Hosts a static site from `/site`
+  * Hosts a static site from `/docs`
   * Serves puzzle JSON files from the repo
 
 No external APIs, databases, or paid services are allowed.
@@ -93,7 +93,7 @@ sudoku-daily/
 │   ├── validator.py
 │   └── difficulty.py
 │
-├── site/
+├── docs/
 │   ├── index.html
 │   ├── app.js
 │   └── style.css

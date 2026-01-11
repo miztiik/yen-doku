@@ -19,7 +19,7 @@ A daily Sudoku puzzle generator and interactive web player.
 
 ## Live Demo
 
-Visit: **[miztiik.github.io/yen-doku](https://miztiik.github.io/yen-doku/site/)**
+Visit: **[miztiik.github.io/yen-doku](https://miztiik.github.io/yen-doku/)**
 
 ## How It Works
 
@@ -88,7 +88,7 @@ python scripts/generate.py --skip-existing
 
 ```bash
 python -m http.server 8080
-# Open http://localhost:8080/site/
+# Open http://localhost:8080/docs/
 ```
 
 ## Project Structure
@@ -109,7 +109,7 @@ yen-doku/
 │   ├── validator.py        # Grid validation
 │   ├── difficulty.py       # Difficulty scoring
 │   └── generate.py         # Puzzle generator CLI
-├── site/
+├── docs/
 │   ├── index.html          # Main page
 │   ├── style.css           # Styling
 │   └── app.js              # Client-side logic
