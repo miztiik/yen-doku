@@ -55,9 +55,9 @@ const el = {
 const today = () => new Date().toISOString().split('T')[0];
 const year = (d) => d.split('-')[0];
 
-// Fixed path - puzzles are at root level, site is a subdirectory
+// Puzzles path - works for both local dev and GitHub Pages
 function path(date, diff) {
-    return `../puzzles/${year(date)}/${diff}/${date}.json`;
+    return `./puzzles/${year(date)}/${diff}/${date}.json`;
 }
 
 function showLoadingSkeleton() {
