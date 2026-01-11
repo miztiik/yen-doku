@@ -1,50 +1,73 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# Yen-Doku Constitution
+<!-- Daily Sudoku Generator & Publisher -->
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Correctness First (NON-NEGOTIABLE)
+Every puzzle **must** have exactly one solution. Validation failures block commits. CI failures over silent corruption. Correctness and determinism take priority over cleverness.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Technology Separation
+- **Python** runs **only in GitHub Actions** — generation, solving, validation, difficulty scoring
+- **JavaScript** runs **only in the browser** — rendering, interaction, optional client-side hints
+- ❌ Python never runs in browser; JavaScript never generates/validates authoritatively
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Static-First Architecture
+- GitHub Pages serves static files from `/site`
+- Puzzles stored as versioned JSON in `/puzzles/<year>/`
+- No external APIs, databases, or paid services
+- Files over services; determinism over randomness
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Test-Driven Validation
+- Every puzzle passes automated tests before commit
+- Solver and validator have dedicated test suites
+- CI job fails if any validation constraint breaks
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Simplicity & Single Responsibility
+- Prefer clarity over abstraction
+- Every component has one job
+- No framework-heavy frontends
+- Avoid over-engineering
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Technology Boundaries
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+| Component | Environment | Purpose |
+|-----------|-------------|---------|
+| `generate.py` | GitHub Actions | Create daily puzzle |
+| `solver.py` | GitHub Actions | Solve and verify uniqueness |
+| `validator.py` | GitHub Actions | Enforce Sudoku rules |
+| `difficulty.py` | GitHub Actions | Score puzzle difficulty |
+| `app.js` | Browser | Render and interact |
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## CI & Automation
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+- Runs daily via GitHub Actions cron
+- Generates **four puzzles per day** (one per difficulty: easy, medium, hard, extreme)
+- Commits only when all generation + validation succeed
+- Runtime stays within GitHub free-tier limits
+- Year and difficulty folders created automatically if missing
+
+## Puzzle Contract (Stable Schema)
+
+```json
+{
+  "date": "YYYY-MM-DD",
+  "difficulty": "easy|medium|hard|extreme",
+  "clueCount": 17-45,
+  "grid": [[0-9 x9 rows]],
+  "solution": [[1-9 x9 rows]]
+}
+```
+- `0` = empty cell; `solution` is authoritative
+- One JSON file per difficulty per day: `puzzles/<year>/<difficulty>/YYYY-MM-DD.json`
+- Four puzzles generated daily (one per difficulty level)
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes all other practices. Any change to core constraints requires:
+1. Documentation of rationale
+2. Update to this constitution
+3. Migration plan for affected components
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+All code reviews must verify compliance with these principles.
+
+**Version**: 1.0.0 | **Ratified**: 2026-01-11 | **Last Amended**: 2026-01-11

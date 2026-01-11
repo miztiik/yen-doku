@@ -1,0 +1,124 @@
+name: Daily Puzzle Generation
+
+on:
+  schedule:
+    # Run daily at 00:05 UTC
+    - cron: '5 0 * * *'
+  workflow_dispatch:
+    # Allow manual trigger
+    inputs:
+      date:
+        description: 'Date to generate puzzles for (YYYY-MM-DD)'
+        required: false
+        default: ''
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Determine date
+        id: date
+        run: |
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            echo "date=${{ github.event.inputs.date }}" >> $GITHUB_OUTPUT
+          else
+            echo "date=$(date -u +%Y-%m-%d)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate puzzles for all difficulties
+        run: |
+          python scripts/generate.py ${{ steps.date.outputs.date }} --skip-existing
+
+      - name: Validate generated puzzles
+        run: |
+          python -c "
+          import json
+          import sys
+          sys.path.insert(0, 'scripts')
+          from solver import count_solutions
+          from validator import is_valid_grid, is_complete, validate_solution
+          from difficulty import Difficulty, get_clue_range
+          from pathlib import Path
+
+          date = '${{ steps.date.outputs.date }}'
+          year = date[:4]
+          errors = []
+
+          for diff in ['easy', 'medium', 'hard', 'extreme']:
+              path = Path(f'puzzles/{year}/{diff}/{date}.json')
+              if not path.exists():
+                  errors.append(f'{diff}: File not found at {path}')
+                  continue
+              
+              puzzle = json.loads(path.read_text())
+              
+              # Check schema
+              required = ['date', 'difficulty', 'clueCount', 'grid', 'solution']
+              for field in required:
+                  if field not in puzzle:
+                      errors.append(f'{diff}: Missing field {field}')
+              
+              # Check grid validity
+              if not is_valid_grid(puzzle['grid']):
+                  errors.append(f'{diff}: Invalid grid')
+              
+              # Check solution completeness
+              if not is_complete(puzzle['solution']):
+                  errors.append(f'{diff}: Incomplete solution')
+              
+              # Check solution validity
+              if not validate_solution(puzzle['grid'], puzzle['solution']):
+                  errors.append(f'{diff}: Solution does not match grid')
+              
+              # CRITICAL: Check unique solution
+              solutions = count_solutions(puzzle['grid'], max_count=2)
+              if solutions != 1:
+                  errors.append(f'{diff}: Puzzle has {solutions} solutions, must be exactly 1')
+              
+              # Check clue count in range
+              min_c, max_c = get_clue_range(Difficulty(diff))
+              if not (min_c <= puzzle['clueCount'] <= max_c):
+                  errors.append(f'{diff}: clueCount {puzzle[\"clueCount\"]} not in range [{min_c}, {max_c}]')
+              
+              print(f'✅ {diff}: Valid ({puzzle[\"clueCount\"]} clues, unique solution)')
+
+          if errors:
+              print('\\n❌ VALIDATION ERRORS:')
+              for e in errors:
+                  print(f'  - {e}')
+              sys.exit(1)
+          
+          print('\\n✅ All puzzles validated successfully')
+          "
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add puzzles/
+          
+          if git diff --staged --quiet; then
+            echo "No new puzzles to commit"
+          else
+            git commit -m "🧩 Add puzzles for ${{ steps.date.outputs.date }}"
+            git push
+          fi
