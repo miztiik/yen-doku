@@ -211,13 +211,32 @@ function validatePuzzle(puzzle) {
 }
 
 /**
+ * Fetch the latest available puzzle date from index.json
+ * @param {string} yearStr - Year string (e.g., "2026")
+ * @param {string} difficulty - Difficulty level
+ * @returns {Promise<string|null>} Latest date or null if not found
+ */
+async function getLatestPuzzleDate(yearStr, difficulty) {
+    try {
+        const indexPath = `puzzles/${yearStr}/index.json`;
+        const res = await fetch(indexPath);
+        if (!res.ok) return null;
+        const index = await res.json();
+        return index.difficulties?.[difficulty]?.last || null;
+    } catch (e) {
+        console.warn('Failed to fetch index.json:', e);
+        return null;
+    }
+}
+
+/**
  * Core puzzle loading logic.
+ * Uses index.json for smart fallback instead of blind retry.
  * @param {string} date - Date in YYYY-MM-DD format
  * @param {string} difficulty - Difficulty level
- * @param {number} retryCount - Number of fallback attempts (try yesterday recursively)
+ * @param {boolean} isFallback - Whether this is already a fallback attempt
  */
-async function loadPuzzle(date, difficulty, retryCount = 0) {
-    const MAX_RETRIES = 7; // Try up to a week back
+async function loadPuzzle(date, difficulty, isFallback = false) {
     const puzzlePath = path(date, difficulty);
     console.log('Loading puzzle from:', puzzlePath);
     
@@ -254,12 +273,14 @@ async function loadPuzzle(date, difficulty, retryCount = 0) {
         console.error('Failed to load puzzle:', e);
         el.grid.classList.remove('loading');
         
-        // Fallback to previous day if available
-        if (retryCount < MAX_RETRIES) {
-            const prevDate = yesterday(date);
-            console.log(`Falling back to ${prevDate}`);
-            loadPuzzle(prevDate, difficulty, retryCount + 1);
-            return;
+        // Smart fallback: use index.json to find latest available puzzle
+        if (!isFallback) {
+            const latestDate = await getLatestPuzzleDate(year(date), difficulty);
+            if (latestDate && latestDate !== date) {
+                console.log(`Falling back to latest: ${latestDate}`);
+                loadPuzzle(latestDate, difficulty, true);
+                return;
+            }
         }
         
         el.error.textContent = 'No puzzle available. Check back later.';
@@ -275,7 +296,7 @@ async function load(difficulty) {
         console.log('Resuming saved game');
         return resumeGame(saved);
     }
-    return loadPuzzle(today(), difficulty, 0);
+    return loadPuzzle(today(), difficulty);
 }
 
 /**
@@ -308,7 +329,7 @@ async function resumeGame(saved) {
     } catch (e) {
         console.error('Failed to resume, loading fresh:', e);
         clearSavedGame();
-        loadPuzzle(today(), saved.difficulty, 0);
+        loadPuzzle(today(), saved.difficulty);
     }
 }
 
@@ -332,7 +353,7 @@ function updateURL() {
     history.replaceState({}, '', url);
 }
 
-// Load a specific date's puzzle (with fallback to previous dates)
+// Load a specific date's puzzle (uses index.json for fallback)
 async function loadWithDate(date, difficulty) {
     // Check for saved game for this specific puzzle
     const saved = loadSavedGame();
@@ -340,7 +361,7 @@ async function loadWithDate(date, difficulty) {
         console.log('Resuming saved game for', date);
         return resumeGame(saved);
     }
-    return loadPuzzle(date, difficulty, 0);
+    return loadPuzzle(date, difficulty);
 }
 
 // ===== Render =====

@@ -12,6 +12,9 @@ on:
         required: false
         default: ''
 
+env:
+  PUZZLE_DIR: docs/puzzles
+
 jobs:
   generate:
     runs-on: ubuntu-latest
@@ -38,19 +41,22 @@ jobs:
         id: date
         run: |
           if [ -n "${{ github.event.inputs.date }}" ]; then
-            echo "date=${{ github.event.inputs.date }}" >> $GITHUB_OUTPUT
+            TARGET_DATE="${{ github.event.inputs.date }}"
           else
-            echo "date=$(date -u +%Y-%m-%d)" >> $GITHUB_OUTPUT
+            TARGET_DATE="$(date -u +%Y-%m-%d)"
           fi
+          echo "date=${TARGET_DATE}" >> $GITHUB_OUTPUT
+          echo "year=${TARGET_DATE:0:4}" >> $GITHUB_OUTPUT
 
       - name: Generate puzzles for all difficulties
         run: |
-          python scripts/generate.py ${{ steps.date.outputs.date }} --skip-existing --output docs/puzzles
+          python scripts/generate.py ${{ steps.date.outputs.date }} --skip-existing --output ${{ env.PUZZLE_DIR }}
 
       - name: Validate generated puzzles
         run: |
           python -c "
           import json
+          import os
           import sys
           sys.path.insert(0, 'scripts')
           from solver import count_solutions
@@ -58,16 +64,20 @@ jobs:
           from difficulty import Difficulty, get_clue_range
           from pathlib import Path
 
+          # Use env var for path - single source of truth
+          puzzle_dir = os.environ.get('PUZZLE_DIR', 'docs/puzzles')
           date = '${{ steps.date.outputs.date }}'
-          year = date[:4]
+          year = '${{ steps.date.outputs.year }}'
           errors = []
+          files_found = 0
 
           for diff in ['easy', 'medium', 'hard', 'extreme']:
-              path = Path(f'docs/puzzles/{year}/{diff}/{date}.json')
+              path = Path(f'{puzzle_dir}/{year}/{diff}/{date}.json')
               if not path.exists():
                   errors.append(f'{diff}: File not found at {path}')
                   continue
               
+              files_found += 1
               puzzle = json.loads(path.read_text())
               
               # Check schema
@@ -106,19 +116,65 @@ jobs:
                   print(f'  - {e}')
               sys.exit(1)
           
-          print('\\n✅ All puzzles validated successfully')
+          # Fail-fast: ensure we found all 4 difficulties
+          if files_found != 4:
+              print(f'\\n❌ FATAL: Expected 4 puzzle files, found {files_found}')
+              sys.exit(1)
+          
+          print(f'\\n✅ All {files_found} puzzles validated successfully')
           "
+
+      - name: Verify files exist before commit
+        id: verify
+        run: |
+          EXPECTED=4
+          FOUND=0
+          YEAR="${{ steps.date.outputs.year }}"
+          DATE="${{ steps.date.outputs.date }}"
+          
+          for diff in easy medium hard extreme; do
+            FILE="${{ env.PUZZLE_DIR }}/${YEAR}/${diff}/${DATE}.json"
+            if [ -f "$FILE" ]; then
+              echo "✓ Found: $FILE"
+              FOUND=$((FOUND + 1))
+            else
+              echo "✗ Missing: $FILE"
+            fi
+          done
+          
+          echo "found=${FOUND}" >> $GITHUB_OUTPUT
+          
+          if [ "$FOUND" -ne "$EXPECTED" ]; then
+            echo "::error::Expected $EXPECTED puzzle files, found $FOUND"
+            exit 1
+          fi
+          
+          echo "✅ All $FOUND puzzle files verified"
 
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          git add puzzles/
+          # Use env var - single source of truth
+          git add ${{ env.PUZZLE_DIR }}/
           
+          # Verify something was staged (fail-fast)
           if git diff --staged --quiet; then
-            echo "No new puzzles to commit"
-          else
-            git commit -m "🧩 Add puzzles for ${{ steps.date.outputs.date }}"
-            git push
+            echo "::warning::No changes staged after git add"
+            echo "Checking file status..."
+            git status --short ${{ env.PUZZLE_DIR }}/
+            
+            # For scheduled runs, this might mean puzzle already exists (--skip-existing)
+            # For manual runs with specific date, this is unexpected
+            if [ -n "${{ github.event.inputs.date }}" ]; then
+              echo "::error::Manual run for ${{ steps.date.outputs.date }} but no files staged"
+              exit 1
+            fi
+            echo "Puzzle for today may already exist (skipped). Exiting gracefully."
+            exit 0
           fi
+          
+          git commit -m "🧩 Add puzzles for ${{ steps.date.outputs.date }}"
+          git push
+          echo "✅ Committed and pushed puzzles for ${{ steps.date.outputs.date }}"
