@@ -218,7 +218,8 @@ function validatePuzzle(puzzle) {
  */
 async function getLatestPuzzleDate(yearStr, difficulty) {
     try {
-        const indexPath = `puzzles/${yearStr}/index.json`;
+        // Cache-bust index.json to always get latest
+        const indexPath = `./puzzles/${yearStr}/index.json?_=${Date.now()}`;
         const res = await fetch(indexPath);
         if (!res.ok) return null;
         const index = await res.json();
@@ -237,7 +238,8 @@ async function getLatestPuzzleDate(yearStr, difficulty) {
  * @param {boolean} isFallback - Whether this is already a fallback attempt
  */
 async function loadPuzzle(date, difficulty, isFallback = false) {
-    const puzzlePath = path(date, difficulty);
+    // Cache-bust puzzle requests to avoid stale 404s
+    const puzzlePath = `${path(date, difficulty)}?_=${Date.now()}`;
     console.log('Loading puzzle from:', puzzlePath);
     
     // Show loading state
