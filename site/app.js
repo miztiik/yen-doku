@@ -24,6 +24,7 @@ const state = {
     selected: null,
     pencilMode: false,
     difficulty: 'extreme',
+    startTime: null,  // Hidden timer - revealed on completion
 };
 
 // ===== DOM =====
@@ -118,6 +119,21 @@ document.addEventListener('visibilitychange', async () => {
         await requestWakeLock();
     }
 });
+
+/**
+ * Format elapsed time as MM:SS or HH:MM:SS
+ */
+function formatElapsedTime(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    
+    if (hours > 0) {
+        return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+    return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
 
 function showLoadingSkeleton() {
     el.grid.innerHTML = '';
@@ -242,6 +258,9 @@ async function loadPuzzle(date, difficulty, fallbackToToday = false) {
         updateTabs();
         render();
         updateURL();
+        
+        // Start hidden timer
+        state.startTime = Date.now();
         
         // Keep screen on during gameplay
         requestWakeLock();
@@ -508,7 +527,6 @@ function hint() {
 
 function check() {
     let correct = 0, incorrect = 0, empty = 0;
-    const cells = el.grid.querySelectorAll('.cell');
     
     for (let r = 0; r < 9; r++) {
         for (let c = 0; c < 9; c++) {
@@ -516,22 +534,20 @@ function check() {
             
             const val = state.grid[r][c];
             const sol = state.puzzle.solution[r][c];
-            const cell = cells[r * 9 + c];
             
             if (val === 0) {
                 empty++;
             } else if (val === sol) {
                 correct++;
-                cell.classList.add('correct');
             } else {
                 incorrect++;
-                cell.classList.add('incorrect');
             }
         }
     }
     
+    // Count only - no highlighting (preserves challenge)
     if (incorrect === 0 && empty === 0) {
-        toast('🎉 Perfect!', 'success');
+        checkWin();  // Trigger victory modal
     } else if (incorrect === 0) {
         toast(`${empty} cells remaining`);
     } else {
@@ -548,7 +564,24 @@ function checkWin() {
     
     // Victory! Release wake lock - screen can sleep now
     releaseWakeLock();
-    toast('🎉 Congratulations!', 'success');
+    
+    // Calculate elapsed time
+    const elapsed = state.startTime ? Date.now() - state.startTime : 0;
+    const timeStr = formatElapsedTime(elapsed);
+    
+    // Show victory modal with time
+    el.modalIcon.textContent = '🎉';
+    el.modalTitle.textContent = 'Congratulations!';
+    el.modalMessage.textContent = `Completed in ${timeStr}`;
+    el.modalConfirm.textContent = 'New Puzzle';
+    el.modalConfirm.className = 'modal-btn modal-btn-primary';
+    el.modal.classList.remove('hidden');
+    
+    el.modalCancel.onclick = () => el.modal.classList.add('hidden');
+    el.modalConfirm.onclick = () => {
+        el.modal.classList.add('hidden');
+        load(state.difficulty);
+    };
 }
 
 function reset() {

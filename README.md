@@ -1,149 +1,53 @@
-# Yen-Doku 🧩
+# Yen-Doku
 
-A delightful daily Sudoku puzzle game — vibe-coded with AI.
+A daily Sudoku puzzle game.
 
 [![Daily Puzzle Generation](https://github.com/miztiik/yen-doku/actions/workflows/daily-generate.yml/badge.svg)](https://github.com/miztiik/yen-doku/actions/workflows/daily-generate.yml)
-[![Deploy to GitHub Pages](https://github.com/miztiik/yen-doku/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/miztiik/yen-doku/actions/workflows/deploy-pages.yml)
-![Python](https://img.shields.io/badge/Python-3.11+-22c55e)
-![Vibe Coded](https://img.shields.io/badge/Vibe-Coded%20✨-ff6b6b)
 
-## ✨ Features
+## Play
 
-- 🎲 **Daily Puzzles** — Fresh puzzles generated every day at midnight UTC
-- 🎯 **4 Difficulty Levels** — Easy, Medium, Hard, Extreme
-- ✅ **Guaranteed Unique Solutions** — Every puzzle has exactly one solution
-- 📅 **Date Navigation** — ‹ › chevrons to browse past puzzles
-- ✏️ **Notes Mode** — Pencil marks for advanced solving
-- 💡 **Hints** — Reveal a correct cell when stuck
-- ↩️ **Undo** — Full undo history (grid + pencil marks)
-- 💾 **Auto-Save** — Resume where you left off
-- 🌓 **Dark/Light Themes** — System-aware with manual toggle
-- 🎉 **Victory Celebration** — Confetti + modal on completion
-
-## Live Demo
-
-**▶ [Play Now → miztiik.github.io/yen-doku](https://miztiik.github.io/yen-doku/)**
+**[miztiik.github.io/yen-doku](https://miztiik.github.io/yen-doku/)**
 
 ## How It Works
 
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  GitHub Actions │───▶│  puzzles/*.json │────▶│  GitHub Pages   │
-│  (Daily @ UTC)  │     │  (4 per day)    │     │  (Static Site)  │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-```
+Fresh puzzles are generated daily at midnight UTC with four difficulty levels. Each puzzle has exactly one solution.
 
-1. **Generation**: Python scripts create puzzles with guaranteed unique solutions
-2. **Storage**: Puzzles saved as JSON in `docs/puzzles/<year>/<difficulty>/YYYY-MM-DD.json`
-3. **Serving**: Static site fetches and renders puzzles client-side
-
-## Difficulty Levels
-
-| Level | Clues | Description |
-|-------|-------|-------------|
-| Easy | 40-45 | Great for beginners |
-| Medium | 32-39 | Moderate challenge |
-| Hard | 26-31 | Requires advanced techniques |
-| Extreme | 17-25 | For Sudoku masters |
+| Level | Clues |
+|-------|-------|
+| Easy | 40-45 |
+| Medium | 32-39 |
+| Hard | 26-31 |
+| Extreme | 17-25 |
 
 ## Local Development
 
-### Prerequisites
-
-- Python 3.11+
-- Git
-
-### Setup
-
 ```bash
-# Clone the repository
 git clone https://github.com/miztiik/yen-doku.git
 cd yen-doku
 
-# Create virtual environment
 python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install dependencies
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+
+# Generate puzzles
+python scripts/generate.py
 
 # Run tests
 python -m pytest tests/ -v
-```
 
-### Generate Puzzles
-
-```bash
-# Generate all 4 difficulties for today
-python scripts/generate.py
-
-# Generate for a specific date
-python scripts/generate.py 2026-01-15
-
-# Generate only extreme difficulty
-python scripts/generate.py 2026-01-15 --difficulty extreme
-
-# Skip existing puzzles
-python scripts/generate.py --skip-existing
-```
-
-### Run Local Server
-
-```bash
+# Local server
 python -m http.server 8080
-# Open http://localhost:8080/docs/
+# Open http://localhost:8080/site/
 ```
 
 ## Project Structure
 
 ```
 yen-doku/
-├── .github/workflows/
-│   ├── daily-generate.yml  # Daily puzzle generation (00:05 UTC)
-│   └── deploy-pages.yml    # GitHub Pages deployment
-│
-├── docs/                    # ← GitHub Pages root
-│   ├── index.html          # Main page
-│   ├── style.css           # Styling (1100+ lines)
-│   ├── app.js              # Client logic (750+ lines)
-│   ├── sw.js               # Service Worker (offline support)
-│   └── puzzles/            # Puzzle JSON files
-│       └── 2026/
-│           ├── easy/
-│           ├── medium/
-│           ├── hard/
-│           ├── extreme/
-│           └── index.json  # Yearly puzzle index
-│
-├── scripts/
-│   ├── generate.py         # Puzzle generator CLI
-│   ├── solver.py           # Backtracking solver
-│   ├── validator.py        # Grid validation
-│   └── difficulty.py       # Difficulty scoring
-│
-├── tests/
-│   ├── test_solver.py      # Python solver tests
-│   ├── test_validator.py   # Python validator tests
-│   ├── test_difficulty.py  # Python difficulty tests
-│   ├── test_generate.py    # Python generator tests
-│   ├── game-logic.js       # Extracted JS functions
-│   └── test_game_logic.js  # JS tests (Node --test)
-│
-├── system-design.md        # Architecture & constraints
-├── requirements.txt
-└── README.md
-```
-
-## Puzzle JSON Schema
-
-```json
-{
-  "date": "2026-01-11",
-  "difficulty": "extreme",
-  "clueCount": 24,
-  "grid": [[7, 0, 0, ...], ...],
-  "solution": [[7, 3, 8, ...], ...]
-}
+├── site/               # Frontend (HTML/CSS/JS)
+├── scripts/            # Puzzle generation (Python)
+├── puzzles/            # Generated puzzle JSON files
+└── tests/              # Python and JS tests
 ```
 
 ## Keyboard Shortcuts
@@ -152,46 +56,13 @@ yen-doku/
 |-----|--------|
 | `1-9` | Enter number |
 | `0` / `Backspace` | Clear cell |
-| `↑↓←→` | Navigate cells |
-| `N` / `P` | Toggle notes mode |
-| `Ctrl+Z` | Undo |
+| `Arrow keys` | Navigate |
+| `P` | Toggle pencil mode |
 | `H` | Hint |
-
-## Testing
-
-```bash
-# Python tests
-python -m pytest tests/ -v
-
-# JavaScript tests (requires Node.js 18+)
-node --test tests/test_game_logic.js
-```
-
-## Contributing
-
-Contributions welcome! This project thrives on community input.
-
-```bash
-git checkout -b feature/your-idea
-```
-
-**Ideas:**
-- 🎨 UI/UX improvements
-- 🧩 New puzzle variants
-- ⚡ Performance optimizations
-- 📱 PWA enhancements
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Frontend | Vanilla HTML/CSS/JS |
-| Backend | Python 3.11 (GitHub Actions) |
-| Hosting | GitHub Pages |
-| Fonts | Nunito, Outfit, Josefin Sans |
+| `Ctrl+Z` | Undo |
 
 ---
 
 <p align="center">
-  <a href="https://miztiik.github.io/yen-doku/">Play Now →</a>
+  <a href="https://miztiik.github.io/yen-doku/">Play Now</a>
 </p>
