@@ -179,6 +179,7 @@ function saveGameState() {
     
     try {
         localStorage.setItem(key, JSON.stringify(data));
+        console.log('💾 Saved game state:', key);
     } catch (e) {
         console.warn('Failed to save game state:', e.message);
     }
@@ -190,11 +191,16 @@ function saveGameState() {
  */
 function loadGameState(date, difficulty) {
     const key = getStorageKey(date, difficulty);
+    console.log('🔍 Looking for saved state:', key);
     
     try {
         const saved = localStorage.getItem(key);
-        if (!saved) return null;
+        if (!saved) {
+            console.log('❌ No saved state found for:', key);
+            return null;
+        }
         
+        console.log('✅ Found saved state for:', key);
         const data = JSON.parse(saved);
         
         // Convert Arrays back to Sets for pencil marks
@@ -370,7 +376,7 @@ async function loadPuzzle(date, difficulty, fallbackToToday = false) {
         // Try to restore saved game state
         const saved = loadGameState(date, difficulty);
         if (saved && saved.grid) {
-            console.log('Restoring saved game state');
+            console.log('🔄 Restoring saved game state for', difficulty);
             state.grid = saved.grid;
             state.pencil = saved.pencil || Array.from({ length: 9 }, () => 
                 Array.from({ length: 9 }, () => new Set())
