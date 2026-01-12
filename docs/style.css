@@ -1098,6 +1098,35 @@ main {
     margin-top: 4px;
 }
 
+/* Hero stat (time) - larger and more prominent */
+.stat.stat-hero .stat-value {
+    font-size: 36px;
+    color: var(--accent);
+}
+
+.stat.stat-hero .stat-label {
+    font-size: 14px;
+}
+
+/* Best time display */
+.best-time {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 6px;
+    font-family: var(--font-mono);
+}
+
+.best-time.new-best {
+    color: #f59e0b;
+    font-weight: 600;
+    animation: pulse-best 1s ease-in-out infinite;
+}
+
+@keyframes pulse-best {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
 .victory-btn {
     background: linear-gradient(135deg, #10b981, #059669);
     color: white;

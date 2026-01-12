@@ -74,6 +74,48 @@ function yesterday(dateStr) {
     return date.toISOString().split('T')[0];
 }
 
+/**
+ * Format elapsed time as MM:SS or HH:MM:SS
+ */
+function formatElapsedTime(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    
+    if (hours > 0) {
+        return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+    return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
+// ===== Best Time Tracking =====
+const BEST_TIME_PREFIX = 'yen-doku-best-';
+
+function getBestTime(difficulty) {
+    try {
+        const key = `${BEST_TIME_PREFIX}${difficulty}`;
+        const saved = localStorage.getItem(key);
+        return saved ? parseInt(saved, 10) : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function saveBestTime(difficulty, ms) {
+    try {
+        const key = `${BEST_TIME_PREFIX}${difficulty}`;
+        const current = getBestTime(difficulty);
+        if (current === null || ms < current) {
+            localStorage.setItem(key, ms.toString());
+            return true; // New best!
+        }
+        return false;
+    } catch (e) {
+        return false;
+    }
+}
+
 // ===== LocalStorage Persistence =====
 function saveGame() {
     if (!state.puzzle) return;
@@ -813,26 +855,34 @@ function createConfetti() {
 }
 
 function showVictoryModal() {
-    // Calculate stats
-    const userCells = 81 - state.puzzle.grid.flat().filter(x => x !== 0).length;
+    // Calculate elapsed time
+    const elapsed = state.startTime ? Date.now() - state.startTime : 0;
+    const timeStr = formatElapsedTime(elapsed);
     const difficulty = state.difficulty.charAt(0).toUpperCase() + state.difficulty.slice(1);
+    
+    // Check if new best time
+    const isNewBest = saveBestTime(state.difficulty, elapsed);
+    const bestTime = getBestTime(state.difficulty);
+    const bestStr = bestTime ? formatElapsedTime(bestTime) : timeStr;
+    
+    // Best time display
+    const bestTimeHtml = isNewBest 
+        ? '<div class="best-time new-best">⭐ New Best!</div>'
+        : `<div class="best-time">Best: ${bestStr}</div>`;
     
     const content = `
         <div class="victory-content">
             <div class="victory-icon">🏆</div>
             <h2 class="victory-title">Puzzle Complete!</h2>
             <div class="victory-stats">
+                <div class="stat stat-hero">
+                    <span class="stat-value">${timeStr}</span>
+                    <span class="stat-label">Time</span>
+                    ${bestTimeHtml}
+                </div>
                 <div class="stat">
                     <span class="stat-value">${difficulty}</span>
                     <span class="stat-label">Difficulty</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-value">${userCells}</span>
-                    <span class="stat-label">Cells Solved</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-value">${state.puzzle.date}</span>
-                    <span class="stat-label">Date</span>
                 </div>
             </div>
             <button class="victory-btn" onclick="closeVictoryModal()">Continue</button>
