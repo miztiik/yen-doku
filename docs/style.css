@@ -481,6 +481,16 @@ main {
     background: var(--accent-hover);
 }
 
+/* Check button - subtle Apple-style: accent icon, fill on hover */
+.tool.tool-check {
+    color: var(--accent);
+}
+
+.tool.tool-check:hover {
+    background: var(--accent);
+    color: white;
+}
+
 .tool.tool-danger:hover {
     background: rgba(239, 68, 68, 0.1);
     color: var(--danger);
