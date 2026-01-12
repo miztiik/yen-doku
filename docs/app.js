@@ -58,23 +58,16 @@ const el = {
 };
 
 // ===== Utils =====
-// Format date as YYYY-MM-DD using local timezone
-function formatDateISO(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-}
-
-const today = () => formatDateISO(new Date());
+// All dates in UTC only - no timezone conversions
+const today = () => new Date().toISOString().split('T')[0];
 const year = (d) => d.split('-')[0];
 
-// Get yesterday's date (timezone-safe)
+// Get yesterday's date (pure string math, no Date object timezone issues)
 function yesterday(dateStr) {
     const [y, m, d] = dateStr.split('-').map(Number);
-    const date = new Date(y, m - 1, d); // Local date
-    date.setDate(date.getDate() - 1);
-    return formatDateISO(date);
+    const date = new Date(Date.UTC(y, m - 1, d));
+    date.setUTCDate(date.getUTCDate() - 1);
+    return date.toISOString().split('T')[0];
 }
 
 // ===== LocalStorage Persistence =====
@@ -387,9 +380,9 @@ async function loadWithDate(date, difficulty) {
 // ===== Date Navigation =====
 function nextDay(dateStr) {
     const [y, m, d] = dateStr.split('-').map(Number);
-    const date = new Date(y, m - 1, d); // Local date
-    date.setDate(date.getDate() + 1);
-    return formatDateISO(date);
+    const date = new Date(Date.UTC(y, m - 1, d));
+    date.setUTCDate(date.getUTCDate() + 1);
+    return date.toISOString().split('T')[0];
 }
 
 function goToPrevDay() {
