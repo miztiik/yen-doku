@@ -24,7 +24,8 @@ const state = {
     selected: null,
     pencilMode: false,
     difficulty: 'extreme',
-    startTime: null,  // Hidden timer - revealed on completion
+    startTime: null,      // Hidden timer - revealed on completion
+    elapsedPaused: 0,     // Accumulated time while tab was hidden
 };
 
 // ===== DOM =====
@@ -113,10 +114,24 @@ async function releaseWakeLock() {
 }
 
 // Auto-reacquire wake lock when tab becomes visible again
+// Also handle timer pause/resume
+let hiddenTime = null;
+
 document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState === 'visible' && state.puzzle !== null) {
-        // Only reacquire if we have an active puzzle (game in progress)
-        await requestWakeLock();
+    if (document.visibilityState === 'hidden') {
+        // Tab hidden - record time for pause calculation
+        hiddenTime = Date.now();
+        saveGameState();  // Save progress when leaving
+    } else if (document.visibilityState === 'visible') {
+        // Tab visible - accumulate paused time
+        if (hiddenTime && state.startTime) {
+            state.elapsedPaused += Date.now() - hiddenTime;
+            hiddenTime = null;
+        }
+        
+        if (state.puzzle !== null) {
+            await requestWakeLock();
+        }
     }
 });
 
@@ -133,6 +148,112 @@ function formatElapsedTime(ms) {
         return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     }
     return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
+// ===== Game State Persistence =====
+const STORAGE_PREFIX = 'yen-doku-';
+const STORAGE_MAX_AGE_DAYS = 30;
+
+/**
+ * Get storage key for a specific puzzle.
+ */
+function getStorageKey(date, difficulty) {
+    return `${STORAGE_PREFIX}${date}-${difficulty}`;
+}
+
+/**
+ * Save current game state to localStorage.
+ * Called after each move (enter, erase, hint).
+ */
+function saveGameState() {
+    if (!state.puzzle) return;
+    
+    const key = getStorageKey(state.puzzle.date, state.difficulty);
+    const data = {
+        grid: state.grid,
+        pencil: state.pencil.map(row => row.map(set => [...set])), // Convert Sets to Arrays
+        startTime: state.startTime,
+        elapsedPaused: state.elapsedPaused,
+        lastActive: Date.now(),
+    };
+    
+    try {
+        localStorage.setItem(key, JSON.stringify(data));
+    } catch (e) {
+        console.warn('Failed to save game state:', e.message);
+    }
+}
+
+/**
+ * Load game state from localStorage.
+ * Returns saved state or null if not found/invalid.
+ */
+function loadGameState(date, difficulty) {
+    const key = getStorageKey(date, difficulty);
+    
+    try {
+        const saved = localStorage.getItem(key);
+        if (!saved) return null;
+        
+        const data = JSON.parse(saved);
+        
+        // Convert Arrays back to Sets for pencil marks
+        if (data.pencil) {
+            data.pencil = data.pencil.map(row => 
+                row.map(arr => new Set(arr))
+            );
+        }
+        
+        return data;
+    } catch (e) {
+        console.warn('Failed to load game state:', e.message);
+        return null;
+    }
+}
+
+/**
+ * Clear game state from localStorage.
+ * Called on puzzle completion or reset.
+ */
+function clearGameState() {
+    if (!state.puzzle) return;
+    
+    const key = getStorageKey(state.puzzle.date, state.difficulty);
+    try {
+        localStorage.removeItem(key);
+    } catch (e) {
+        console.warn('Failed to clear game state:', e.message);
+    }
+}
+
+/**
+ * Clean up old game states (older than 30 days).
+ * Called on app init.
+ */
+function cleanupOldGameStates() {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - STORAGE_MAX_AGE_DAYS);
+    const cutoffStr = cutoffDate.toISOString().split('T')[0];
+    
+    try {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith(STORAGE_PREFIX)) {
+                // Extract date from key: yen-doku-2026-01-12-extreme
+                const match = key.match(/yen-doku-(\d{4}-\d{2}-\d{2})/);
+                if (match && match[1] < cutoffStr) {
+                    keysToRemove.push(key);
+                }
+            }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        if (keysToRemove.length > 0) {
+            console.log(`Cleaned up ${keysToRemove.length} old game states`);
+        }
+    } catch (e) {
+        console.warn('Failed to cleanup old game states:', e.message);
+    }
 }
 
 function showLoadingSkeleton() {
@@ -244,13 +365,30 @@ async function loadPuzzle(date, difficulty, fallbackToToday = false) {
         validatePuzzle(puzzle);
         
         state.puzzle = puzzle;
-        state.grid = puzzle.grid.map(r => [...r]);
-        state.pencil = Array.from({ length: 9 }, () => 
-            Array.from({ length: 9 }, () => new Set())
-        );
+        state.difficulty = difficulty;
+        
+        // Try to restore saved game state
+        const saved = loadGameState(date, difficulty);
+        if (saved && saved.grid) {
+            console.log('Restoring saved game state');
+            state.grid = saved.grid;
+            state.pencil = saved.pencil || Array.from({ length: 9 }, () => 
+                Array.from({ length: 9 }, () => new Set())
+            );
+            state.startTime = saved.startTime || Date.now();
+            state.elapsedPaused = saved.elapsedPaused || 0;
+        } else {
+            // Fresh puzzle - no saved state
+            state.grid = puzzle.grid.map(r => [...r]);
+            state.pencil = Array.from({ length: 9 }, () => 
+                Array.from({ length: 9 }, () => new Set())
+            );
+            state.startTime = Date.now();
+            state.elapsedPaused = 0;
+        }
+        
         state.history = [];
         state.selected = null;
-        state.difficulty = difficulty;
         
         el.date.textContent = formatDate(puzzle.date);
         el.error.classList.add('hidden');
@@ -258,9 +396,6 @@ async function loadPuzzle(date, difficulty, fallbackToToday = false) {
         updateTabs();
         render();
         updateURL();
-        
-        // Start hidden timer
-        state.startTime = Date.now();
         
         // Keep screen on during gameplay
         requestWakeLock();
@@ -456,6 +591,7 @@ function enter(num) {
     }
     
     render();
+    saveGameState();  // Persist progress
     checkWin();
 }
 
@@ -468,6 +604,7 @@ function erase() {
     state.grid[row][col] = 0;
     state.pencil[row][col].clear();
     render();
+    saveGameState();  // Persist progress
 }
 
 function saveHistory() {
@@ -487,6 +624,7 @@ function undo() {
     state.grid = prev.grid;
     state.pencil = prev.pencil;
     render();
+    saveGameState();  // Persist after undo
 }
 
 function togglePencil() {
@@ -522,6 +660,7 @@ function hint() {
     cells[row * 9 + col].classList.add('hint-reveal');
     
     toast('💡 Hint revealed');
+    saveGameState();  // Persist progress
     checkWin();
 }
 
@@ -562,11 +701,14 @@ function checkWin() {
         }
     }
     
-    // Victory! Release wake lock - screen can sleep now
+    // Victory! Clear saved state and release wake lock
+    clearGameState();
     releaseWakeLock();
     
-    // Calculate elapsed time
-    const elapsed = state.startTime ? Date.now() - state.startTime : 0;
+    // Calculate elapsed time (subtract paused time)
+    const elapsed = state.startTime 
+        ? (Date.now() - state.startTime - state.elapsedPaused) 
+        : 0;
     const timeStr = formatElapsedTime(elapsed);
     
     // Show victory modal with time
@@ -621,6 +763,9 @@ function doReset() {
     );
     state.history = [];
     state.selected = null;
+    state.startTime = Date.now();  // Reset timer
+    state.elapsedPaused = 0;
+    clearGameState();  // Clear saved progress
     render();
     toast('Puzzle reset');
 }
@@ -667,6 +812,9 @@ function onKey(e) {
 
 // ===== Init =====
 function init() {
+    // Cleanup old saved game states (older than 30 days)
+    cleanupOldGameStates();
+    
     // Grid cell clicks (event delegation)
     el.grid.addEventListener('click', (e) => {
         const cell = e.target.closest('.cell');

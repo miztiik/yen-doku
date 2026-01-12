@@ -209,12 +209,31 @@ The frontend follows **Apple Human Interface Guidelines** principles:
 
 #### Feedback & Celebration
 * **Toast Notifications** — Non-blocking, auto-dismiss (3s)
-* **Check Button** — Highlights errors temporarily (1.5s), doesn't reveal correct answers
-* **Victory Celebration**:
-  * Staggered green fill animation on all cells
-  * Confetti particle system (50 pieces, 3s duration)
-  * Modal with time display and share option
-  * Triggered only on genuine completion, not on hint/check
+* **Check Button** — Counts errors without highlighting (preserves challenge)
+* **Victory Modal**:
+  * Shows elapsed time (paused time excluded)
+  * "New Puzzle" button to start next puzzle
+  * Confetti/celebration animation
+  * Triggered only on genuine completion
+
+#### Game State Persistence (localStorage)
+* **Storage Key Format** — `yen-doku-{date}-{difficulty}` (e.g., `yen-doku-2026-01-12-extreme`)
+* **Saved Data**:
+  * `grid` — Current cell values (9×9 array)
+  * `pencil` — Pencil marks per cell (arrays, converted from Sets)
+  * `startTime` — Timer start timestamp
+  * `elapsedPaused` — Accumulated time while tab was hidden
+  * `lastActive` — For cleanup detection
+* **Save Triggers** — After each move (enter, erase, hint, undo)
+* **Load Trigger** — On puzzle load, restores saved state if exists
+* **Clear Triggers** — On puzzle completion (victory) or reset
+* **Auto-Cleanup** — States older than 30 days deleted on app init
+* **Timer Behavior** — Pauses when tab hidden, resumes on visible
+
+This enables:
+* Switch Easy → Extreme → Easy with progress preserved
+* Refresh page without losing progress
+* Come back tomorrow, yesterday's progress still saved
 
 #### Accessibility
 * ARIA labels on all interactive elements
