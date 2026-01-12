@@ -37,6 +37,8 @@ const $$ = (sel) => document.querySelectorAll(sel);
 const el = {
     grid: $('#sudoku-grid'),
     date: $('#puzzle-date'),
+    prevDay: $('#btn-prev-day'),
+    nextDay: $('#btn-next-day'),
     error: $('#error-message'),
     toast: $('#toast'),
     btnPencil: $('#btn-pencil'),
@@ -240,7 +242,8 @@ async function getLatestPuzzleDate(yearStr, difficulty) {
 async function loadPuzzle(date, difficulty, isFallback = false) {
     // Cache-bust puzzle requests to avoid stale 404s
     const puzzlePath = `${path(date, difficulty)}?_=${Date.now()}`;
-    console.log('Loading puzzle from:', puzzlePath);
+    console.log(`[loadPuzzle] date=${date}, difficulty=${difficulty}, isFallback=${isFallback}`);
+    console.log('[loadPuzzle] Fetching:', puzzlePath);
     
     // Show loading state
     el.grid.classList.add('loading');
@@ -248,6 +251,7 @@ async function loadPuzzle(date, difficulty, isFallback = false) {
     
     try {
         const res = await fetch(puzzlePath);
+        console.log(`[loadPuzzle] Response: ${res.status} ${res.ok ? 'OK' : 'FAIL'}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const puzzle = await res.json();
         
@@ -270,6 +274,7 @@ async function loadPuzzle(date, difficulty, isFallback = false) {
         updateTabs();
         render();
         updateURL();
+        updateDateNav(); // Update chevron states
         saveGame(); // Save initial state
     } catch (e) {
         console.error('Failed to load puzzle:', e);
@@ -277,12 +282,15 @@ async function loadPuzzle(date, difficulty, isFallback = false) {
         
         // Smart fallback: use index.json to find latest available puzzle
         if (!isFallback) {
+            console.log('[loadPuzzle] Fetching index.json for fallback...');
             const latestDate = await getLatestPuzzleDate(year(date), difficulty);
+            console.log(`[loadPuzzle] latestDate=${latestDate}, requestedDate=${date}`);
             if (latestDate && latestDate !== date) {
-                console.log(`Falling back to latest: ${latestDate}`);
+                console.log(`[loadPuzzle] Falling back to: ${latestDate}`);
                 loadPuzzle(latestDate, difficulty, true);
                 return;
             }
+            console.log('[loadPuzzle] No fallback possible');
         }
         
         el.error.textContent = 'No puzzle available. Check back later.';
@@ -326,6 +334,7 @@ async function resumeGame(saved) {
         updateTabs();
         render();
         updateURL();
+        updateDateNav(); // Update chevron states
         
         toast('Game resumed');
     } catch (e) {
@@ -364,6 +373,58 @@ async function loadWithDate(date, difficulty) {
         return resumeGame(saved);
     }
     return loadPuzzle(date, difficulty);
+}
+
+// ===== Date Navigation =====
+function nextDay(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().split('T')[0];
+}
+
+function goToPrevDay() {
+    if (!state.puzzle) return;
+    const prevDate = yesterday(state.puzzle.date);
+    loadWithDate(prevDate, state.difficulty);
+}
+
+function goToNextDay() {
+    if (!state.puzzle) return;
+    const next = nextDay(state.puzzle.date);
+    if (next > today()) return; // Can't go to future
+    loadWithDate(next, state.difficulty);
+}
+
+/**
+ * Update date navigation button states based on available puzzles
+ */
+async function updateDateNav() {
+    if (!state.puzzle) return;
+    
+    const currentDate = state.puzzle.date;
+    const yearStr = year(currentDate);
+    
+    // Fetch index to check available dates
+    try {
+        const indexPath = `./puzzles/${yearStr}/index.json?_=${Date.now()}`;
+        const res = await fetch(indexPath);
+        if (!res.ok) throw new Error('No index');
+        const index = await res.json();
+        
+        const dates = index.difficulties?.[state.difficulty]?.dates || [];
+        const firstDate = index.difficulties?.[state.difficulty]?.first;
+        
+        // Disable prev if we're at the first available puzzle
+        el.prevDay.disabled = currentDate === firstDate || !dates.includes(yesterday(currentDate));
+        
+        // Disable next if we're at today or next day doesn't exist
+        const next = nextDay(currentDate);
+        el.nextDay.disabled = next > today() || !dates.includes(next);
+    } catch (e) {
+        // If index fetch fails, use simple date logic
+        el.prevDay.disabled = false;
+        el.nextDay.disabled = nextDay(currentDate) > today();
+    }
 }
 
 // ===== Render =====
@@ -858,6 +919,10 @@ function init() {
     el.btnCheck.onclick = check;
     el.btnUndo.onclick = undo;
     el.btnReset.onclick = reset;
+    
+    // Date navigation
+    el.prevDay.onclick = goToPrevDay;
+    el.nextDay.onclick = goToNextDay;
     
     // Keyboard
     document.addEventListener('keydown', onKey);
