@@ -399,14 +399,21 @@ function goToNextDay() {
  * Update date navigation button states based on available puzzles
  */
 async function updateDateNav() {
-    if (!state.puzzle) return;
+    if (!state.puzzle) {
+        console.log('[updateDateNav] No puzzle loaded');
+        return;
+    }
     
     const currentDate = state.puzzle.date;
     const yearStr = year(currentDate);
+    const todayDate = today();
+    
+    console.log('[updateDateNav] currentDate:', currentDate, 'today:', todayDate);
     
     // Fetch index to check available dates
     try {
         const indexPath = `./puzzles/${yearStr}/index.json?_=${Date.now()}`;
+        console.log('[updateDateNav] Fetching:', indexPath);
         const res = await fetch(indexPath);
         if (!res.ok) throw new Error('No index');
         const index = await res.json();
@@ -414,18 +421,25 @@ async function updateDateNav() {
         const dates = index.difficulties?.[state.difficulty]?.dates || [];
         const firstDate = index.difficulties?.[state.difficulty]?.first;
         
+        console.log('[updateDateNav] dates:', dates, 'firstDate:', firstDate);
+        
         // Disable prev if we're at the first available puzzle
-        el.prevDay.disabled = currentDate === firstDate || !dates.includes(yesterday(currentDate));
+        const prevDate = yesterday(currentDate);
+        const prevDisabled = currentDate === firstDate || !dates.includes(prevDate);
+        console.log('[updateDateNav] prevDate:', prevDate, 'prevDisabled:', prevDisabled);
+        el.prevDay.disabled = prevDisabled;
         
         // Hide next if we're at today (no future puzzles exist)
         const next = nextDay(currentDate);
-        const isToday = currentDate === today();
+        const isToday = currentDate === todayDate;
+        console.log('[updateDateNav] next:', next, 'isToday:', isToday);
         el.nextDay.style.visibility = isToday ? 'hidden' : 'visible';
         el.nextDay.disabled = !dates.includes(next);
     } catch (e) {
+        console.error('[updateDateNav] Error:', e);
         // If index fetch fails, use simple date logic
         el.prevDay.disabled = false;
-        const isToday = currentDate === today();
+        const isToday = currentDate === todayDate;
         el.nextDay.style.visibility = isToday ? 'hidden' : 'visible';
         el.nextDay.disabled = true;
     }
