@@ -28,7 +28,11 @@ const state = {
 };
 
 // ===== Storage Keys =====
-const STORAGE_KEY = 'yendoku_game';
+const STORAGE_PREFIX = 'yen-doku-';
+
+function getStorageKey(date, difficulty) {
+    return `${STORAGE_PREFIX}${date}-${difficulty}`;
+}
 
 // ===== DOM =====
 const $ = (sel) => document.querySelector(sel);
@@ -74,6 +78,7 @@ function yesterday(dateStr) {
 function saveGame() {
     if (!state.puzzle) return;
     
+    const key = getStorageKey(state.puzzle.date, state.difficulty);
     const saveData = {
         date: state.puzzle.date,
         difficulty: state.difficulty,
@@ -88,17 +93,23 @@ function saveGame() {
     };
     
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
+        localStorage.setItem(key, JSON.stringify(saveData));
+        console.log('💾 Saved:', key);
     } catch (e) {
         console.warn('Failed to save game:', e);
     }
 }
 
-function loadSavedGame() {
+function loadSavedGame(date, difficulty) {
+    const key = getStorageKey(date, difficulty);
     try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (!saved) return null;
+        const saved = localStorage.getItem(key);
+        if (!saved) {
+            console.log('❌ No saved state for:', key);
+            return null;
+        }
         
+        console.log('✅ Found saved state:', key);
         const data = JSON.parse(saved);
         
         // Restore pencil marks as Sets
@@ -116,8 +127,11 @@ function loadSavedGame() {
 }
 
 function clearSavedGame() {
+    if (!state.puzzle) return;
+    const key = getStorageKey(state.puzzle.date, state.difficulty);
     try {
-        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(key);
+        console.log('🗑️ Cleared:', key);
     } catch (e) {
         console.warn('Failed to clear saved game:', e);
     }
@@ -303,12 +317,13 @@ async function loadPuzzle(date, difficulty, isFallback = false) {
 
 async function load(difficulty) {
     // Check for saved game for today's puzzle at this difficulty
-    const saved = loadSavedGame();
-    if (saved && saved.date === today() && saved.difficulty === difficulty) {
-        console.log('Resuming saved game');
+    const todayDate = today();
+    const saved = loadSavedGame(todayDate, difficulty);
+    if (saved) {
+        console.log('🔄 Resuming saved game for', difficulty);
         return resumeGame(saved);
     }
-    return loadPuzzle(today(), difficulty);
+    return loadPuzzle(todayDate, difficulty);
 }
 
 /**
@@ -369,9 +384,9 @@ function updateURL() {
 // Load a specific date's puzzle (uses index.json for fallback)
 async function loadWithDate(date, difficulty) {
     // Check for saved game for this specific puzzle
-    const saved = loadSavedGame();
-    if (saved && saved.date === date && saved.difficulty === difficulty) {
-        console.log('Resuming saved game for', date);
+    const saved = loadSavedGame(date, difficulty);
+    if (saved) {
+        console.log('🔄 Resuming saved game for', date, difficulty);
         return resumeGame(saved);
     }
     return loadPuzzle(date, difficulty);
