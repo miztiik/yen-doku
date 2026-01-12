@@ -683,6 +683,22 @@ function hint() {
 }
 
 function check() {
+    // Already solved? Quick exit
+    let solved = true;
+    for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+            if (state.grid[r][c] !== state.puzzle.solution[r][c]) {
+                solved = false;
+                break;
+            }
+        }
+        if (!solved) break;
+    }
+    if (solved) {
+        toast('✓ Already solved!');
+        return;
+    }
+    
     let correct = 0, incorrect = 0, empty = 0;
     const cells = el.grid.querySelectorAll('.cell');
     const markedCells = [];
