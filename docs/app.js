@@ -417,13 +417,17 @@ async function updateDateNav() {
         // Disable prev if we're at the first available puzzle
         el.prevDay.disabled = currentDate === firstDate || !dates.includes(yesterday(currentDate));
         
-        // Disable next if we're at today or next day doesn't exist
+        // Hide next if we're at today (no future puzzles exist)
         const next = nextDay(currentDate);
-        el.nextDay.disabled = next > today() || !dates.includes(next);
+        const isToday = currentDate === today();
+        el.nextDay.style.visibility = isToday ? 'hidden' : 'visible';
+        el.nextDay.disabled = !dates.includes(next);
     } catch (e) {
         // If index fetch fails, use simple date logic
         el.prevDay.disabled = false;
-        el.nextDay.disabled = nextDay(currentDate) > today();
+        const isToday = currentDate === today();
+        el.nextDay.style.visibility = isToday ? 'hidden' : 'visible';
+        el.nextDay.disabled = true;
     }
 }
 
