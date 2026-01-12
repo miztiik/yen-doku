@@ -58,14 +58,23 @@ const el = {
 };
 
 // ===== Utils =====
-const today = () => new Date().toISOString().split('T')[0];
+// Format date as YYYY-MM-DD using local timezone
+function formatDateISO(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
+const today = () => formatDateISO(new Date());
 const year = (d) => d.split('-')[0];
 
-// Get yesterday's date
+// Get yesterday's date (timezone-safe)
 function yesterday(dateStr) {
-    const d = new Date(dateStr + 'T00:00:00');
-    d.setDate(d.getDate() - 1);
-    return d.toISOString().split('T')[0];
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const date = new Date(y, m - 1, d); // Local date
+    date.setDate(date.getDate() - 1);
+    return formatDateISO(date);
 }
 
 // ===== LocalStorage Persistence =====
@@ -377,9 +386,10 @@ async function loadWithDate(date, difficulty) {
 
 // ===== Date Navigation =====
 function nextDay(dateStr) {
-    const d = new Date(dateStr + 'T00:00:00');
-    d.setDate(d.getDate() + 1);
-    return d.toISOString().split('T')[0];
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const date = new Date(y, m - 1, d); // Local date
+    date.setDate(date.getDate() + 1);
+    return formatDateISO(date);
 }
 
 function goToPrevDay() {
