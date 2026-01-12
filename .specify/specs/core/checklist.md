@@ -2,7 +2,7 @@
 
 **Purpose**: Track implementation progress of all features  
 **Created**: 2026-01-11  
-**Last Updated**: 2026-01-11  
+**Last Updated**: 2026-01-12  
 **Spec**: [spec.md](spec.md)  
 **Design System**: [design-system.md](design-system.md)
 
@@ -173,6 +173,12 @@
 | 081 | Same-number highlighting | ✅ | All matching values glow |
 | 082 | Hint button | ✅ | Reveals one correct cell |
 | 083 | Keyboard navigation | ✅ | Arrow keys, 1-9, N for notes |
+| 084 | LocalStorage persistence | ✅ | Save/resume game on return |
+| 085 | Undo button | ✅ | Full undo history with pencil marks |
+| 086 | Date fallback via index.json | ✅ | Smart fallback to latest available |
+| 087 | Date navigation chevrons | ✅ | ‹ › arrows to navigate days |
+| 088 | Footer with GitHub link | ✅ | Subtle branding |
+| 089 | JavaScript test suite | ✅ | Node.js built-in test runner |
 
 ---
 
@@ -180,12 +186,12 @@
 
 | Priority | Total | Completed | Remaining |
 |----------|-------|-----------|-----------|
-| P1 | 28 | 27 | 1 |
+| P1 | 28 | 28 | 0 |
 | P2 | 28 | 26 | 2 |
 | P3 | 9 | 8 | 1 |
 | Infra | 5 | 4 | 1 |
-| UI/UX Enhancements | 13 | 13 | 0 |
-| **Total** | **83** | **78** | **5** |
+| UI/UX Enhancements | 19 | 19 | 0 |
+| **Total** | **89** | **85** | **4** |
 
 ---
 
@@ -198,3 +204,6 @@
 | 2026-01-11 | **Major update**: Marked 78 items complete, added 13 UI/UX enhancements |
 | 2026-01-11 | Fixed paths: site/ → docs/, puzzles/ → docs/puzzles/ |
 | 2026-01-11 | Added design-system.md reference |
+| 2026-01-12 | Added localStorage persistence, undo, date fallback, chevron navigation |
+| 2026-01-12 | Fixed GitHub Actions workflow (commit path bug) |
+| 2026-01-12 | Added JavaScript test suite |

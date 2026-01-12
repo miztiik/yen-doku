@@ -1,7 +1,7 @@
 # UI/UX Design System — Yen-Doku
 
 **Created**: 2026-01-11  
-**Last Updated**: 2026-01-11  
+**Last Updated**: 2026-01-12  
 **Status**: Implemented  
 **Philosophy**: Apple Human Interface Guidelines (HIG) inspired
 
@@ -463,6 +463,11 @@ Smooth transition between themes (0.3s on background-color, color).
 | **Spiral victory animation** | More visually interesting than random or linear |
 | **3-second toasts** | Long enough to read, short enough to not annoy |
 | **44px touch targets** | Apple HIG compliance; comfortable for fingers |
+| **Date navigation chevrons** | Apple-style (‹ ›) for prev/next day, minimal UI |
+| **Hidden future chevron** | Right arrow hidden on today (no future puzzles exist) |
+| **LocalStorage persistence** | Resume game on return without explicit save |
+| **UTC-only dates** | Consistent puzzle dates regardless of user timezone |
+| **index.json fallback** | Smart fallback to latest puzzle instead of blind retry |
 
 ---
 
@@ -472,12 +477,18 @@ Smooth transition between themes (0.3s on background-color, color).
 |------|-------|---------|
 | `docs/style.css` | 1-70 | Design tokens (CSS custom properties) |
 | `docs/style.css` | 130-160 | Logo and subtitle styling |
+| `docs/style.css` | 152-200 | Date navigation chevrons |
 | `docs/style.css` | 250-400 | Grid and cell styling |
 | `docs/style.css` | 900-1100 | Victory celebration (confetti, modal) |
+| `docs/app.js` | 60-80 | Date utilities (UTC-based) |
+| `docs/app.js` | 80-140 | LocalStorage persistence |
+| `docs/app.js` | 380-440 | Date navigation (chevrons) |
 | `docs/app.js` | 460-520 | Check button logic |
 | `docs/app.js` | 530-650 | Victory celebration JS |
+| `tests/game-logic.js` | 1-180 | Extracted pure functions for testing |
+| `tests/test_game_logic.js` | 1-310 | JavaScript test suite |
 
 ---
 
-**Last Updated**: 2026-01-11  
+**Last Updated**: 2026-01-12  
 **Maintainer**: Vibe-coded with GitHub Copilot 🤖

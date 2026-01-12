@@ -12,10 +12,13 @@ A delightful daily Sudoku puzzle game — vibe-coded with AI.
 - 🎲 **Daily Puzzles** — Fresh puzzles generated every day at midnight UTC
 - 🎯 **4 Difficulty Levels** — Easy, Medium, Hard, Extreme
 - ✅ **Guaranteed Unique Solutions** — Every puzzle has exactly one solution
-- 📅 **Calendar Picker** — Play any past puzzle
+- 📅 **Date Navigation** — ‹ › chevrons to browse past puzzles
 - ✏️ **Notes Mode** — Pencil marks for advanced solving
 - 💡 **Hints** — Reveal a correct cell when stuck
+- ↩️ **Undo** — Full undo history (grid + pencil marks)
+- 💾 **Auto-Save** — Resume where you left off
 - 🌓 **Dark/Light Themes** — System-aware with manual toggle
+- 🎉 **Victory Celebration** — Confetti + modal on completion
 
 ## Live Demo
 
@@ -119,10 +122,12 @@ yen-doku/
 │   └── difficulty.py       # Difficulty scoring
 │
 ├── tests/
-│   ├── test_solver.py
-│   ├── test_validator.py
-│   ├── test_difficulty.py
-│   └── test_generate.py
+│   ├── test_solver.py      # Python solver tests
+│   ├── test_validator.py   # Python validator tests
+│   ├── test_difficulty.py  # Python difficulty tests
+│   ├── test_generate.py    # Python generator tests
+│   ├── game-logic.js       # Extracted JS functions
+│   └── test_game_logic.js  # JS tests (Node --test)
 │
 ├── system-design.md        # Architecture & constraints
 ├── requirements.txt
@@ -148,7 +153,19 @@ yen-doku/
 | `1-9` | Enter number |
 | `0` / `Backspace` | Clear cell |
 | `↑↓←→` | Navigate cells |
-| `N` | Toggle notes mode |
+| `N` / `P` | Toggle notes mode |
+| `Ctrl+Z` | Undo |
+| `H` | Hint |
+
+## Testing
+
+```bash
+# Python tests
+python -m pytest tests/ -v
+
+# JavaScript tests (requires Node.js 18+)
+node --test tests/test_game_logic.js
+```
 
 ## Contributing
 
