@@ -151,6 +151,60 @@ def generate_puzzle(
     return None
 
 
+def generate_puzzle_with_seed(
+    date_str: str,
+    difficulty: Difficulty,
+    base_seed: int,
+    max_attempts: int = 10,
+    verbose: bool = False
+) -> dict | None:
+    """
+    Generate a puzzle with a specific base seed (for variants).
+    
+    Args:
+        date_str: Date in YYYY-MM-DD format
+        difficulty: Target difficulty level
+        base_seed: Base seed for generation
+        max_attempts: Maximum generation attempts (default: 10)
+        verbose: Print progress information
+    
+    Returns:
+        Puzzle dict or None if generation fails
+    """
+    min_clues, max_clues = get_clue_range(difficulty)
+
+    for attempt in range(max_attempts):
+        attempt_seed = base_seed + attempt
+        rng = random.Random(attempt_seed)
+
+        if verbose and attempt > 0:
+            print(f"  ⟳ Retry {attempt}/{max_attempts-1}...", end=" ")
+
+        complete_grid = _generate_complete_grid(attempt_seed)
+        puzzle_grid = _remove_clues_for_difficulty(complete_grid, difficulty, rng)
+
+        if puzzle_grid is None:
+            continue
+
+        clues = count_clues(puzzle_grid)
+
+        if not is_valid_grid(puzzle_grid):
+            continue
+
+        if count_solutions(puzzle_grid, max_count=2) != 1:
+            continue
+
+        return {
+            "date": date_str,
+            "difficulty": difficulty.value,
+            "clueCount": clues,
+            "grid": puzzle_grid,
+            "solution": complete_grid,
+        }
+
+    return None
+
+
 def save_puzzle(puzzle: dict, base_path: str = "puzzles", variant: int = 1) -> str:
     """
     Save puzzle to the correct folder structure.
@@ -178,6 +232,26 @@ def save_puzzle(puzzle: dict, base_path: str = "puzzles", variant: int = 1) -> s
         json.dump(puzzle, f, indent=2)
 
     return str(file_path)
+
+
+def get_next_variant(base_path: str, date_str: str, difficulty: str) -> int:
+    """
+    Find the next available variant number for a given date and difficulty.
+    
+    Args:
+        base_path: Base path for puzzles folder
+        date_str: Date in YYYY-MM-DD format
+        difficulty: Difficulty level string
+    
+    Returns:
+        Next available variant number (1 if none exist)
+    """
+    year = date_str[:4]
+    folder = Path(base_path) / year / difficulty
+    variant = 1
+    while (folder / f"{date_str}-{str(variant).zfill(3)}.json").exists():
+        variant += 1
+    return variant
 
 
 def main():
@@ -208,6 +282,12 @@ def main():
         help="Skip if puzzle file already exists",
     )
     parser.add_argument(
+        "--variant",
+        type=str,
+        default="1",
+        help="Variant number (1, 2, 3...) or 'auto' to auto-increment (default: 1)",
+    )
+    parser.add_argument(
         "--max-retries",
         type=int,
         default=10,
@@ -231,18 +311,32 @@ def main():
     results = []
     for diff in difficulties:
         year = args.date[:4]
-        file_path = Path(args.output) / year / diff.value / f"{args.date}-001.json"
+        
+        # Determine variant number
+        if args.variant.lower() == "auto":
+            variant = get_next_variant(args.output, args.date, diff.value)
+        else:
+            variant = int(args.variant)
+        
+        file_path = Path(args.output) / year / diff.value / f"{args.date}-{str(variant).zfill(3)}.json"
 
-        # Skip if exists and flag set
+        # Skip if exists and flag set (only for non-auto mode)
         if args.skip_existing and file_path.exists():
             print(f"⏭️  Skipping {diff.value} - already exists")
             continue
 
-        print(f"🎲 Generating {diff.value} puzzle for {args.date}...", end=" ")
-        puzzle = generate_puzzle(args.date, diff, max_attempts=args.max_retries, verbose=args.verbose)
+        print(f"🎲 Generating {diff.value} puzzle for {args.date} (variant {variant})...", end=" ")
+        
+        # Use variant-specific seed for different puzzles
+        if variant > 1:
+            variant_seed_offset = (variant - 1) * 1000
+            base_seed = _date_difficulty_seed(args.date, diff) + variant_seed_offset
+            puzzle = generate_puzzle_with_seed(args.date, diff, base_seed, max_attempts=args.max_retries, verbose=args.verbose)
+        else:
+            puzzle = generate_puzzle(args.date, diff, max_attempts=args.max_retries, verbose=args.verbose)
 
         if puzzle:
-            saved_path = save_puzzle(puzzle, args.output)
+            saved_path = save_puzzle(puzzle, args.output, variant=variant)
             print(f"✅ Saved to {saved_path} ({puzzle['clueCount']} clues)")
             results.append(puzzle)
         else:
