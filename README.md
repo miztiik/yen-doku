@@ -65,7 +65,7 @@ yen-doku/
 │   ├── style.css           # Styles
 │   ├── sw.js               # Service worker
 │   └── puzzles/            # Generated puzzle JSONs
-│       └── {year}/{difficulty}/YYYY-MM-DD.json
+│       └── {year}/{difficulty}/YYYY-MM-DD-001.json
 ├── scripts/                # Puzzle generation (Python)
 │   ├── generate.py         # Main generator
 │   ├── solver.py           # Backtracking solver
@@ -109,7 +109,7 @@ yen-doku/
 │                           ▼                                 │
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │              docs/puzzles/{year}/                    │   │
-│  │         {difficulty}/YYYY-MM-DD.json                │   │
+│  │       {difficulty}/YYYY-MM-DD-001.json               │   │
 │  └────────────────────────┬────────────────────────────┘   │
 │                           │                                 │
 └───────────────────────────┼─────────────────────────────────┘
