@@ -442,16 +442,6 @@ main {
     }
 }
 
-/* Reveal button styling - subtle cyan accent */
-.tool.tool-reveal {
-    color: #0891b2;
-}
-
-.tool.tool-reveal:hover {
-    background: rgba(8, 145, 178, 0.12);
-    color: #0e7490;
-}
-
 /* Disabled state after reveal */
 .grid.revealed .cell {
     cursor: default;
@@ -546,16 +536,27 @@ main {
     background: var(--accent-hover);
 }
 
-/* Check button - subtle Apple-style: accent icon, fill on hover */
-.tool.tool-check {
-    color: var(--accent);
+/* Apple-consistent: all buttons gray by default, semantic colors on hover only */
+
+/* Hint button - amber/yellow on hover */
+.tool.tool-hint:hover {
+    background: rgba(245, 158, 11, 0.12);
+    color: #d97706;
 }
 
+/* Check button - accent purple on hover */
 .tool.tool-check:hover {
     background: var(--accent);
     color: white;
 }
 
+/* Reveal button - cyan on hover */
+.tool.tool-reveal:hover {
+    background: rgba(8, 145, 178, 0.12);
+    color: #0891b2;
+}
+
+/* Reset/Danger button - red on hover */
 .tool.tool-danger:hover {
     background: rgba(239, 68, 68, 0.1);
     color: var(--danger);

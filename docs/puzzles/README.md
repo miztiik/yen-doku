@@ -7,16 +7,25 @@ This directory contains daily Sudoku puzzles organized by year and difficulty le
 ```
 puzzles/
 └── 2026/
-    ├── index.json          # Manifest of all available puzzles
     ├── easy/
-    │   └── 2026-01-11.json
+    │   └── 2026-01-11-001.json    # Convention: YYYY-MM-DD-NNN.json
     ├── medium/
-    │   └── 2026-01-11.json
+    │   └── 2026-01-11-001.json
     ├── hard/
-    │   └── 2026-01-11.json
+    │   ├── 2026-01-11-001.json
+    │   └── 2026-01-11-002.json    # Optional: multiple puzzles per day
     └── extreme/
-        └── 2026-01-11.json
+        └── 2026-01-11-001.json
 ```
+
+## Convention-Based Discovery (No Index Required)
+
+The frontend discovers puzzles using **HEAD requests** instead of an index file:
+
+1. **Primary puzzle**: Always `{date}-001.json`
+2. **Additional variants**: Increment suffix (`-002`, `-003`, etc.)
+3. **Year crossover**: Date string contains year, so `2025-12-31-001.json` is fetched from `2025/` folder
+4. **Fallback**: If today's puzzle doesn't exist, probe backwards (max 7 days) until found
 
 ## Puzzle JSON Schema
 
@@ -139,10 +148,10 @@ on:
 
 ### Pipeline Steps
 
-1. **Generate**: Create 4 puzzles (easy, medium, hard, extreme)
+1. **Generate**: Create 4 puzzles (easy, medium, hard, extreme) with `-001` suffix
 2. **Validate**: Verify schema, grid validity, solution uniqueness
-3. **Update index.json**: Add new dates to manifest
-4. **Commit & Push**: Only if all validations pass
+3. **Commit & Push**: Only if all validations pass
+4. **Auto-Deploy**: Triggered via `workflow_run` event
 
 ## Local Development
 
@@ -152,7 +161,7 @@ on:
 # Install dependencies
 pip install -r requirements.txt
 
-# Generate today's puzzles
+# Generate today's puzzles (outputs YYYY-MM-DD-001.json)
 python scripts/generate.py $(date +%Y-%m-%d) --output docs/puzzles
 
 # Generate specific difficulty
@@ -164,7 +173,7 @@ import json
 from scripts.validator import is_valid_grid, validate_solution
 from scripts.solver import count_solutions
 
-puzzle = json.load(open('docs/puzzles/2026/extreme/2026-01-11.json'))
+puzzle = json.load(open('docs/puzzles/2026/extreme/2026-01-11-001.json'))
 print('Valid grid:', is_valid_grid(puzzle['grid']))
 print('Solutions:', count_solutions(puzzle['grid']))
 "

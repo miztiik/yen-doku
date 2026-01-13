@@ -83,17 +83,17 @@ yen-doku/
 │   └── puzzles/              # ← Puzzles inside docs for Pages
 │       └── 2026/
 │           ├── easy/
-│           │   └── 2026-01-11.json
+│           │   └── 2026-01-11-001.json    # Convention: YYYY-MM-DD-NNN.json
 │           ├── medium/
-│           │   └── 2026-01-11.json
+│           │   └── 2026-01-11-001.json
 │           ├── hard/
-│           │   └── 2026-01-11.json
-│           ├── extreme/
-│           │   └── 2026-01-11.json
-│           └── index.json    # Yearly navigation index
+│           │   ├── 2026-01-11-001.json
+│           │   └── 2026-01-11-002.json    # Optional: multiple puzzles per day
+│           └── extreme/
+│               └── 2026-01-11-001.json
 │
 ├── scripts/
-│   ├── generate.py           # CLI: --max-retries, --verbose, --no-index
+│   ├── generate.py           # CLI: --max-retries, --verbose
 │   ├── solver.py             # Backtracking with count_solutions()
 │   ├── validator.py          # Sudoku rule validation
 │   └── difficulty.py         # Clue count → difficulty mapping
@@ -117,10 +117,11 @@ yen-doku/
 ### 5. Puzzle Storage Rules
 
 * Puzzles are stored under `/docs/puzzles/<year>/<difficulty>/`
-* **One JSON file per day per difficulty level**
-* Folder structure: `docs/puzzles/<year>/<difficulty>/YYYY-MM-DD.json`
-* Year and difficulty folders must be created automatically if missing
-* A yearly `index.json` is generated for calendar navigation
+* **Convention-based naming**: `YYYY-MM-DD-NNN.json` (e.g., `2026-01-11-001.json`)
+* First puzzle of the day is always `-001`, additional variants increment (`-002`, `-003`)
+* Year and difficulty folders are created automatically if missing
+* **No index.json required**: The UI discovers puzzles via HEAD requests (sequential 404 probing)
+* Year crossover is automatic: date string contains year, so navigation works seamlessly
 * Storing in `/docs` allows GitHub Pages to serve puzzles directly
 
 ---

@@ -106,7 +106,7 @@ class TestGeneratePuzzle:
 
 class TestSavePuzzle:
     def test_saves_to_correct_path(self):
-        """Puzzle is saved to puzzles/<year>/<difficulty>/YYYY-MM-DD.json."""
+        """Puzzle is saved to puzzles/<year>/<difficulty>/YYYY-MM-DD-001.json (convention-based)."""
         puzzle = {
             "date": "2026-01-11",
             "difficulty": "extreme",
@@ -118,7 +118,7 @@ class TestSavePuzzle:
         with tempfile.TemporaryDirectory() as tmpdir:
             saved_path = save_puzzle(puzzle, tmpdir)
 
-            expected_path = Path(tmpdir) / "2026" / "extreme" / "2026-01-11.json"
+            expected_path = Path(tmpdir) / "2026" / "extreme" / "2026-01-11-001.json"
             assert Path(saved_path) == expected_path
             assert expected_path.exists()
 

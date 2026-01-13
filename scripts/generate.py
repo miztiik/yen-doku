@@ -151,13 +151,14 @@ def generate_puzzle(
     return None
 
 
-def save_puzzle(puzzle: dict, base_path: str = "puzzles") -> str:
+def save_puzzle(puzzle: dict, base_path: str = "puzzles", variant: int = 1) -> str:
     """
     Save puzzle to the correct folder structure.
 
     Args:
         puzzle: Puzzle dict
         base_path: Base path for puzzles folder
+        variant: Puzzle variant number (default: 1)
 
     Returns:
         Path to saved file
@@ -170,56 +171,13 @@ def save_puzzle(puzzle: dict, base_path: str = "puzzles") -> str:
     folder = Path(base_path) / year / difficulty
     folder.mkdir(parents=True, exist_ok=True)
 
-    # Save as YYYY-MM-DD.json
-    file_path = folder / f"{date_str}.json"
+    # Save as YYYY-MM-DD-001.json (convention-based, no index required)
+    suffix = str(variant).zfill(3)
+    file_path = folder / f"{date_str}-{suffix}.json"
     with open(file_path, "w") as f:
         json.dump(puzzle, f, indent=2)
 
     return str(file_path)
-
-
-def update_yearly_index(year: str, base_path: str = "puzzles") -> str:
-    """
-    Update the yearly index.json with all available puzzles.
-    
-    Args:
-        year: Year string (e.g., "2026")
-        base_path: Base path for puzzles folder
-        
-    Returns:
-        Path to index.json file
-    """
-    year_folder = Path(base_path) / year
-    if not year_folder.exists():
-        return None
-    
-    index = {
-        "year": year,
-        "difficulties": {},
-        "updated": datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
-    }
-    
-    for difficulty in ["easy", "medium", "hard", "extreme"]:
-        diff_folder = year_folder / difficulty
-        if not diff_folder.exists():
-            continue
-            
-        puzzle_files = sorted(diff_folder.glob("*.json"))
-        dates = [f.stem for f in puzzle_files if f.stem != "index"]
-        
-        if dates:
-            index["difficulties"][difficulty] = {
-                "count": len(dates),
-                "first": dates[0],
-                "last": dates[-1],
-                "dates": dates,
-            }
-    
-    index_path = year_folder / "index.json"
-    with open(index_path, "w") as f:
-        json.dump(index, f, indent=2)
-    
-    return str(index_path)
 
 
 def main():
@@ -261,11 +219,6 @@ def main():
         action="store_true",
         help="Print detailed progress information",
     )
-    parser.add_argument(
-        "--no-index",
-        action="store_true",
-        help="Skip updating the yearly index.json file",
-    )
 
     args = parser.parse_args()
 
@@ -278,7 +231,7 @@ def main():
     results = []
     for diff in difficulties:
         year = args.date[:4]
-        file_path = Path(args.output) / year / diff.value / f"{args.date}.json"
+        file_path = Path(args.output) / year / diff.value / f"{args.date}-001.json"
 
         # Skip if exists and flag set
         if args.skip_existing and file_path.exists():
@@ -295,13 +248,6 @@ def main():
         else:
             print(f"❌ Failed to generate")
             return 1
-
-    # Update yearly index
-    if not args.no_index and results:
-        year = args.date[:4]
-        index_path = update_yearly_index(year, args.output)
-        if index_path:
-            print(f"📋 Updated index: {index_path}")
 
     print(f"\n✨ Generated {len(results)} puzzle(s)")
     return 0

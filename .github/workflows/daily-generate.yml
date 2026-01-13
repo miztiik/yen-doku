@@ -72,7 +72,8 @@ jobs:
           files_found = 0
 
           for diff in ['easy', 'medium', 'hard', 'extreme']:
-              path = Path(f'{puzzle_dir}/{year}/{diff}/{date}.json')
+              # Convention-based: YYYY-MM-DD-001.json (supports multi-puzzle per day)
+              path = Path(f'{puzzle_dir}/{year}/{diff}/{date}-001.json')
               if not path.exists():
                   errors.append(f'{diff}: File not found at {path}')
                   continue
@@ -133,7 +134,8 @@ jobs:
           DATE="${{ steps.date.outputs.date }}"
           
           for diff in easy medium hard extreme; do
-            FILE="${{ env.PUZZLE_DIR }}/${YEAR}/${diff}/${DATE}.json"
+            # Convention-based: YYYY-MM-DD-001.json (supports multi-puzzle per day)
+            FILE="${{ env.PUZZLE_DIR }}/${YEAR}/${diff}/${DATE}-001.json"
             if [ -f "$FILE" ]; then
               echo "✓ Found: $FILE"
               FOUND=$((FOUND + 1))

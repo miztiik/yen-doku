@@ -181,9 +181,16 @@ function clearSavedGame() {
     }
 }
 
-// Puzzles path - works for both local dev and GitHub Pages
+// Puzzles path - convention-based with variant suffix
+// Format: ./puzzles/{year}/{difficulty}/{date}-{variant}.json
+function puzzlePath(date, diff, variant = 1) {
+    const suffix = String(variant).padStart(3, '0');
+    return `./puzzles/${year(date)}/${diff}/${date}-${suffix}.json`;
+}
+
+// Legacy alias for compatibility
 function path(date, diff) {
-    return `./puzzles/${year(date)}/${diff}/${date}.json`;
+    return puzzlePath(date, diff, 1);
 }
 
 function showLoadingSkeleton() {
@@ -273,44 +280,75 @@ function validatePuzzle(puzzle) {
 }
 
 /**
- * Fetch the latest available puzzle date from index.json
- * @param {string} yearStr - Year string (e.g., "2026")
+ * Check if a puzzle exists for a given date using HEAD request (convention-based)
+ * @param {string} date - Date in YYYY-MM-DD format
  * @param {string} difficulty - Difficulty level
- * @returns {Promise<string|null>} Latest date or null if not found
+ * @param {number} variant - Puzzle variant number (default: 1)
+ * @returns {Promise<boolean>} True if puzzle exists
  */
-async function getLatestPuzzleDate(yearStr, difficulty) {
+async function puzzleExists(date, difficulty, variant = 1) {
     try {
-        // Cache-bust index.json to always get latest
-        const indexPath = `./puzzles/${yearStr}/index.json?_=${Date.now()}`;
-        const res = await fetch(indexPath);
-        if (!res.ok) return null;
-        const index = await res.json();
-        return index.difficulties?.[difficulty]?.last || null;
+        const url = `${puzzlePath(date, difficulty, variant)}?_=${Date.now()}`;
+        const res = await fetch(url, { method: 'HEAD' });
+        return res.ok;
     } catch (e) {
-        console.warn('Failed to fetch index.json:', e);
-        return null;
+        return false;
     }
 }
 
 /**
- * Core puzzle loading logic.
- * Uses index.json for smart fallback instead of blind retry.
+ * Find the latest available puzzle by probing backwards from a start date (convention-based)
+ * @param {string} startDate - Date to start searching from
+ * @param {string} difficulty - Difficulty level
+ * @param {number} maxDays - Maximum days to search backwards (default: 7)
+ * @returns {Promise<string|null>} Latest available date or null
+ */
+async function findLatestPuzzle(startDate, difficulty, maxDays = 7) {
+    let date = startDate;
+    for (let i = 0; i < maxDays; i++) {
+        if (await puzzleExists(date, difficulty)) {
+            return date;
+        }
+        date = yesterday(date);
+    }
+    return null;
+}
+
+/**
+ * Get count of puzzle variants for a given date (convention-based, sequential 404)
  * @param {string} date - Date in YYYY-MM-DD format
  * @param {string} difficulty - Difficulty level
+ * @returns {Promise<number>} Number of variants (0 if none exist)
+ */
+async function getPuzzleVariantCount(date, difficulty) {
+    let count = 0;
+    while (await puzzleExists(date, difficulty, count + 1)) {
+        count++;
+        if (count >= 10) break; // Safety limit
+    }
+    return count;
+}
+
+/**
+ * Core puzzle loading logic.
+ * Uses convention-based probing for smart fallback (no index.json required).
+ * @param {string} date - Date in YYYY-MM-DD format
+ * @param {string} difficulty - Difficulty level
+ * @param {number} variant - Puzzle variant (default: 1)
  * @param {boolean} isFallback - Whether this is already a fallback attempt
  */
-async function loadPuzzle(date, difficulty, isFallback = false) {
+async function loadPuzzle(date, difficulty, variant = 1, isFallback = false) {
     // Cache-bust puzzle requests to avoid stale 404s
-    const puzzlePath = `${path(date, difficulty)}?_=${Date.now()}`;
-    console.log(`[loadPuzzle] date=${date}, difficulty=${difficulty}, isFallback=${isFallback}`);
-    console.log('[loadPuzzle] Fetching:', puzzlePath);
+    const puzzleUrl = `${puzzlePath(date, difficulty, variant)}?_=${Date.now()}`;
+    console.log(`[loadPuzzle] date=${date}, difficulty=${difficulty}, variant=${variant}, isFallback=${isFallback}`);
+    console.log('[loadPuzzle] Fetching:', puzzleUrl);
     
     // Show loading state
     el.grid.classList.add('loading');
     showLoadingSkeleton();
     
     try {
-        const res = await fetch(puzzlePath);
+        const res = await fetch(puzzleUrl);
         console.log(`[loadPuzzle] Response: ${res.status} ${res.ok ? 'OK' : 'FAIL'}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const puzzle = await res.json();
@@ -342,14 +380,14 @@ async function loadPuzzle(date, difficulty, isFallback = false) {
         console.error('Failed to load puzzle:', e);
         el.grid.classList.remove('loading');
         
-        // Smart fallback: use index.json to find latest available puzzle
+        // Smart fallback: probe backwards to find latest available puzzle (convention-based)
         if (!isFallback) {
-            console.log('[loadPuzzle] Fetching index.json for fallback...');
-            const latestDate = await getLatestPuzzleDate(year(date), difficulty);
+            console.log('[loadPuzzle] Probing for latest available puzzle...');
+            const latestDate = await findLatestPuzzle(yesterday(date), difficulty);
             console.log(`[loadPuzzle] latestDate=${latestDate}, requestedDate=${date}`);
-            if (latestDate && latestDate !== date) {
+            if (latestDate) {
                 console.log(`[loadPuzzle] Falling back to: ${latestDate}`);
-                loadPuzzle(latestDate, difficulty, true);
+                loadPuzzle(latestDate, difficulty, 1, true);
                 return;
             }
             console.log('[loadPuzzle] No fallback possible');
@@ -376,10 +414,10 @@ async function load(difficulty) {
  * Resume a saved game from localStorage
  */
 async function resumeGame(saved) {
-    const puzzlePath = path(saved.date, saved.difficulty);
+    const savedPuzzlePath = path(saved.date, saved.difficulty);
     
     try {
-        const res = await fetch(puzzlePath);
+        const res = await fetch(savedPuzzlePath);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const puzzle = await res.json();
         validatePuzzle(puzzle);
@@ -429,7 +467,7 @@ function updateURL() {
     history.replaceState({}, '', url);
 }
 
-// Load a specific date's puzzle (uses index.json for fallback)
+// Load a specific date's puzzle (convention-based fallback)
 async function loadWithDate(date, difficulty) {
     // Check for saved game for this specific puzzle
     const saved = loadSavedGame(date, difficulty);
@@ -462,7 +500,7 @@ function goToNextDay() {
 }
 
 /**
- * Update date navigation button states based on available puzzles
+ * Update date navigation button states based on available puzzles (convention-based)
  */
 async function updateDateNav() {
     if (!state.puzzle) {
@@ -471,43 +509,29 @@ async function updateDateNav() {
     }
     
     const currentDate = state.puzzle.date;
-    const yearStr = year(currentDate);
     const todayDate = today();
     
     console.log('[updateDateNav] currentDate:', currentDate, 'today:', todayDate);
     
-    // Fetch index to check available dates
-    try {
-        const indexPath = `./puzzles/${yearStr}/index.json?_=${Date.now()}`;
-        console.log('[updateDateNav] Fetching:', indexPath);
-        const res = await fetch(indexPath);
-        if (!res.ok) throw new Error('No index');
-        const index = await res.json();
-        
-        const dates = index.difficulties?.[state.difficulty]?.dates || [];
-        const firstDate = index.difficulties?.[state.difficulty]?.first;
-        
-        console.log('[updateDateNav] dates:', dates, 'firstDate:', firstDate);
-        
-        // Disable prev if we're at the first available puzzle
-        const prevDate = yesterday(currentDate);
-        const prevDisabled = currentDate === firstDate || !dates.includes(prevDate);
-        console.log('[updateDateNav] prevDate:', prevDate, 'prevDisabled:', prevDisabled);
-        el.prevDay.disabled = prevDisabled;
-        
-        // Hide next if we're at today (no future puzzles exist)
-        const next = nextDay(currentDate);
-        const isToday = currentDate === todayDate;
-        console.log('[updateDateNav] next:', next, 'isToday:', isToday);
-        el.nextDay.style.visibility = isToday ? 'hidden' : 'visible';
-        el.nextDay.disabled = !dates.includes(next);
-    } catch (e) {
-        console.error('[updateDateNav] Error:', e);
-        // If index fetch fails, use simple date logic
-        el.prevDay.disabled = false;
-        const isToday = currentDate === todayDate;
-        el.nextDay.style.visibility = isToday ? 'hidden' : 'visible';
-        el.nextDay.disabled = true;
+    // Convention-based: probe previous and next dates with HEAD requests
+    const prevDate = yesterday(currentDate);
+    const nextDate = nextDay(currentDate);
+    
+    // Check if previous puzzle exists
+    const prevExists = await puzzleExists(prevDate, state.difficulty);
+    console.log('[updateDateNav] prevDate:', prevDate, 'exists:', prevExists);
+    el.prevDay.disabled = !prevExists;
+    
+    // Hide next if we're at today (no future puzzles exist)
+    const isToday = currentDate === todayDate;
+    console.log('[updateDateNav] nextDate:', nextDate, 'isToday:', isToday);
+    el.nextDay.style.visibility = isToday ? 'hidden' : 'visible';
+    
+    // Check if next puzzle exists (only if not already at today)
+    if (!isToday) {
+        const nextExists = await puzzleExists(nextDate, state.difficulty);
+        console.log('[updateDateNav] nextExists:', nextExists);
+        el.nextDay.disabled = !nextExists;
     }
 }
 
