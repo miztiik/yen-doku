@@ -178,3 +178,4 @@ jobs:
           git commit -m "🧩 Add puzzles for ${{ steps.date.outputs.date }}"
           git push
           echo "✅ Committed and pushed puzzles for ${{ steps.date.outputs.date }}"
+          # Note: Deploy workflow is triggered automatically via workflow_run event
