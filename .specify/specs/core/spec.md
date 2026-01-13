@@ -83,9 +83,9 @@ As a solver, I can click a "Check" button to validate my current entries against
 
 ---
 
-### User Story 4 - Pencil Marks / Notes Mode (Priority: P2)
+### User Story 5 - Notes Mode / Pencil Marks (Priority: P2)
 
-As a solver, I can toggle into "Notes Mode" to enter small candidate numbers in empty cells so that I can track possibilities and use advanced solving techniques.
+As a solver, I can toggle into "Notes Mode" to enter small candidate numbers (pencil marks) in empty cells so that I can track possibilities and use advanced solving techniques.
 
 **Why this priority**: Essential for medium/hard puzzles where multiple candidates exist. Power users expect this feature.
 
@@ -101,7 +101,7 @@ As a solver, I can toggle into "Notes Mode" to enter small candidate numbers in 
 
 ---
 
-### User Story 5 - Reveal Solution (Priority: P3)
+### User Story 6 - Reveal Solution (Priority: P3)
 
 As a stuck solver, I can reveal the solution to see the correct answer so that I can learn from the puzzle.
 
@@ -117,7 +117,7 @@ As a stuck solver, I can reveal the solution to see the correct answer so that I
 
 ---
 
-### User Story 6 - Daily Puzzle Generation (Priority: P1)
+### User Story 7 - Daily Puzzle Generation (Priority: P1)
 
 As the system (automated), I generate exactly one valid Sudoku puzzle per day with a guaranteed unique solution so that users always have fresh content.
 
@@ -134,7 +134,7 @@ As the system (automated), I generate exactly one valid Sudoku puzzle per day wi
 
 ---
 
-### User Story 7 - Puzzle Validation (Priority: P1)
+### User Story 8 - Puzzle Validation (Priority: P1)
 
 As the CI system, I validate every puzzle before commit to ensure it obeys Sudoku rules and has exactly one solution so that no invalid puzzle ever reaches users.
 
@@ -152,7 +152,7 @@ As the CI system, I validate every puzzle before commit to ensure it obeys Sudok
 
 ---
 
-### User Story 8 - Difficulty Scoring (Priority: P2)
+### User Story 9 - Difficulty Scoring (Priority: P2)
 
 As the generator, I assign a difficulty rating (easy/medium/hard/extreme) to each puzzle so that users know what to expect.
 
@@ -170,7 +170,7 @@ As the generator, I assign a difficulty rating (easy/medium/hard/extreme) to eac
 
 ---
 
-### User Story 9 - Browse Past Puzzles (Priority: P3)
+### User Story 10 - Browse Past Puzzles (Priority: P3)
 
 As a returning user, I can browse puzzles from previous days so that I can solve ones I missed.
 
@@ -219,7 +219,7 @@ As a returning user, I can browse puzzles from previous days so that I can solve
 - **FR-004a**: System MUST support generating puzzles for a specific target difficulty level
 - **FR-004b**: System MUST validate that generated puzzle's clue count matches target difficulty range
 - **FR-004c**: System MUST retry generation (max 10 attempts) if puzzle doesn't meet difficulty criteria
-- **FR-005**: System MUST store puzzles as JSON files in `puzzles/<year>/<difficulty>/YYYY-MM-DD.json`
+- **FR-005**: System MUST store puzzles as JSON files in `docs/puzzles/<year>/<difficulty>/YYYY-MM-DD.json`
 - **FR-005a**: Each difficulty level has its own subfolder (easy/, medium/, hard/, extreme/)
 - **FR-006**: System MUST create year folders automatically if missing
 - **FR-007**: System MUST fail CI and block commit if validation fails
@@ -264,7 +264,8 @@ As a returning user, I can browse puzzles from previous days so that I can solve
 - **FR-031**: Cells in same row/column/box as selected cell MAY have subtle highlight (#f5f5ff)
 - **FR-032**: Conflicting cells MUST show clear error state (red background #ffebee, red border #f44336)
 - **FR-033**: Completed puzzle MUST show success state (green glow animation on grid)
-- **FR-034**: Notes (pencil marks) MUST display in smaller font (40% of cell size) in a 3×3 sub-grid layout within cell
+- **FR-034**: Notes (pencil marks) MUST display in smaller font (40% of cell size) in a 3×3 sub-grid layout within cell:
+  - Position mapping: 1=top-left, 2=top-center, 3=top-right, 4=mid-left, 5=center, 6=mid-right, 7=bottom-left, 8=bottom-center, 9=bottom-right
 - **FR-035**: Color palette MUST maintain WCAG AA contrast ratios for accessibility
 
 #### Difficulty Display & UX (JavaScript/Browser)

@@ -82,22 +82,22 @@ yen-doku/
 │   ├── test_generator.py
 │   └── test_difficulty.py
 │
-├── puzzles/
-│   ├── README.md
-│   └── 2026/
-│       ├── easy/
-│       │   └── 2026-01-11.json
-│       ├── medium/
-│       │   └── 2026-01-11.json
-│       ├── hard/
-│       │   └── 2026-01-11.json
-│       └── extreme/
-│           └── 2026-01-11.json
-│
-├── site/
+├── docs/                         # GitHub Pages (production)
 │   ├── index.html
 │   ├── app.js
-│   └── style.css
+│   ├── style.css
+│   ├── sw.js
+│   └── puzzles/
+│       └── 2026/
+│           ├── index.json
+│           ├── easy/
+│           │   └── 2026-01-11.json
+│           ├── medium/
+│           │   └── 2026-01-11.json
+│           ├── hard/
+│           │   └── 2026-01-11.json
+│           └── extreme/
+│               └── 2026-01-11.json
 │
 ├── requirements.txt
 ├── .gitignore

@@ -398,6 +398,71 @@ main {
     background: var(--cell-conflict);
 }
 
+/* ===== Revealed Solution States ===== */
+.cell.revealed {
+    color: #0891b2 !important;  /* Teal/cyan for revealed cells */
+    font-weight: 500;
+    cursor: default;
+    animation: revealFade 0.4s var(--ease) forwards;
+}
+
+.cell.revealed.was-empty {
+    background: rgba(8, 145, 178, 0.08);
+}
+
+.cell.revealed.was-incorrect {
+    background: rgba(239, 68, 68, 0.12);
+    animation: revealIncorrect 0.6s var(--ease) forwards;
+}
+
+@keyframes revealFade {
+    0% { 
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    100% { 
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes revealIncorrect {
+    0% { 
+        opacity: 0;
+        transform: scale(0.8);
+        background: rgba(239, 68, 68, 0.35);
+    }
+    50% {
+        background: rgba(239, 68, 68, 0.25);
+    }
+    100% { 
+        opacity: 1;
+        transform: scale(1);
+        background: rgba(239, 68, 68, 0.12);
+    }
+}
+
+/* Reveal button styling - subtle cyan accent */
+.tool.tool-reveal {
+    color: #0891b2;
+}
+
+.tool.tool-reveal:hover {
+    background: rgba(8, 145, 178, 0.12);
+    color: #0e7490;
+}
+
+/* Disabled state after reveal */
+.grid.revealed .cell {
+    cursor: default;
+    pointer-events: none;
+}
+
+.grid.revealed .cell:hover {
+    background: inherit;
+    transform: none;
+}
+
 .cell.hint-reveal {
     animation: hintPop 0.5s var(--ease-spring);
 }

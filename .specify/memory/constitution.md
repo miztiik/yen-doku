@@ -12,8 +12,8 @@ Every puzzle **must** have exactly one solution. Validation failures block commi
 - ❌ Python never runs in browser; JavaScript never generates/validates authoritatively
 
 ### III. Static-First Architecture
-- GitHub Pages serves static files from `/site`
-- Puzzles stored as versioned JSON in `/puzzles/<year>/`
+- GitHub Pages serves static files from `/docs`
+- Puzzles stored as versioned JSON in `/docs/puzzles/<year>/`
 - No external APIs, databases, or paid services
 - Files over services; determinism over randomness
 
@@ -70,4 +70,4 @@ This constitution supersedes all other practices. Any change to core constraints
 
 All code reviews must verify compliance with these principles.
 
-**Version**: 1.0.0 | **Ratified**: 2026-01-11 | **Last Amended**: 2026-01-11
+**Version**: 1.1.0 | **Ratified**: 2026-01-11 | **Last Amended**: 2026-01-13

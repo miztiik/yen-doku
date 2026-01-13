@@ -2,7 +2,7 @@
 
 **Purpose**: Track implementation progress of all features  
 **Created**: 2026-01-11  
-**Last Updated**: 2026-01-12  
+**Last Updated**: 2026-01-13  
 **Spec**: [spec.md](spec.md)  
 **Design System**: [design-system.md](design-system.md)
 
@@ -105,7 +105,7 @@
 | 046 | Display difficulty badge | ✅ | Color-coded badge below grid |
 | 047 | Color-code by difficulty | ✅ | Green/Yellow/Orange/Red |
 | 048 | Show clue count | ✅ | Badge shows "(28 clues)" |
-| 049 | Filter archive by difficulty | ⬜ | P3 — not yet implemented |
+| 049 | Filter archive by difficulty | 🅿️ | **Parked** — not necessary |
 
 ### Difficulty Navigation (P1)
 
@@ -127,8 +127,8 @@
 
 | # | Feature | Status | Notes |
 |---|---------|--------|-------|
-| 057 | "Reveal Solution" button | ✅ | Fill grid from solution field |
-| 058 | Visual distinction for revealed | ✅ | Different color for revealed cells |
+| 057 | "Reveal Solution" button | ✅ | Eye icon, positive modal, staggered animation |
+| 058 | Visual distinction for revealed | ✅ | Teal color for revealed, red tint for was-incorrect |
 | 059 | "Reset Puzzle" button | ✅ | Restore to initial state |
 | 060 | Clear all notes on reset | ✅ | Full state reset |
 
@@ -140,7 +140,7 @@
 | 062 | Date picker UI | ✅ | Native date input in header |
 | 063 | Load puzzle by date | ✅ | Fetch from archive via calendar |
 | 064 | "No puzzle available" handling | ✅ | Graceful error for missing dates |
-| 065 | Filter by difficulty in archive | ⬜ | Not yet implemented |
+| 065 | Filter by difficulty in archive | 🅿️ | **Parked** — not necessary |
 
 ---
 
@@ -149,7 +149,7 @@
 | # | Feature | Status | Notes |
 |---|---------|--------|-------|
 | 066 | Create `docs/puzzles/` directory | ✅ | `docs/puzzles/2026/<difficulty>/` |
-| 067 | Create puzzles README | ⬜ | Optional — low priority |
+| 067 | Create puzzles README | ✅ | Monte Carlo docs, difficulty thresholds |
 | 068 | Configure GitHub Pages | ✅ | Serve from `/docs` folder |
 | 069 | Add `.gitignore` | ✅ | Python, node, IDE files |
 | 070 | Add Service Worker | ✅ | `docs/sw.js` for offline support |
@@ -184,14 +184,20 @@
 
 ## Summary
 
-| Priority | Total | Completed | Remaining |
-|----------|-------|-----------|-----------|
-| P1 | 28 | 28 | 0 |
-| P2 | 28 | 26 | 2 |
-| P3 | 9 | 8 | 1 |
-| Infra | 5 | 4 | 1 |
-| UI/UX Enhancements | 19 | 19 | 0 |
-| **Total** | **89** | **85** | **4** |
+| Priority | Total | Completed | Parked/Skipped | Remaining |
+|----------|-------|-----------|----------------|-----------|
+| P1 | 28 | 28 | 0 | 0 |
+| P2 | 28 | 26 | 2 | 0 |
+| P3 | 9 | 7 | 2 | 0 |
+| Infra | 5 | 5 | 0 | 0 |
+| UI/UX Enhancements | 19 | 19 | 0 | 0 |
+| **Total** | **89** | **85** | **4** | **0** |
+
+**Parked/Skipped Items** (4):  
+- #022 — Parked  
+- #049 — Parked (P3 Archive)  
+- #054 — Skipped (quick switch UX preferred)  
+- #065 — Parked (P3 Archive)
 
 ---
 
@@ -207,3 +213,6 @@
 | 2026-01-12 | Added localStorage persistence, undo, date fallback, chevron navigation |
 | 2026-01-12 | Fixed GitHub Actions workflow (commit path bug) |
 | 2026-01-12 | Added JavaScript test suite |
+| 2026-01-13 | Corrected #057/#058 status (not implemented); parked #049, #065; completed #067 |
+| 2026-01-13 | **Implemented #057 & #058**: Reveal Solution button with positive modal, staggered animation, was-incorrect highlighting |
+| 2026-01-13 | **Phase 7 Complete**: README updated, 34 Python tests passing, all puzzle schemas validated |

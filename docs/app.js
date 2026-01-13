@@ -25,6 +25,7 @@ const state = {
     pencilMode: false,
     difficulty: 'extreme',
     startTime: null,
+    revealed: false,
 };
 
 // ===== Storage Keys =====
@@ -49,6 +50,7 @@ const el = {
     btnErase: $('#btn-erase'),
     btnHint: $('#btn-hint'),
     btnCheck: $('#btn-check'),
+    btnReveal: $('#btn-reveal'),
     btnUndo: $('#btn-undo'),
     btnReset: $('#btn-reset'),
     tabs: $$('.tab'),
@@ -325,10 +327,12 @@ async function loadPuzzle(date, difficulty, isFallback = false) {
         state.selected = null;
         state.difficulty = difficulty;
         state.startTime = Date.now();
+        state.revealed = false;
         
         el.date.textContent = formatDate(puzzle.date);
         el.error.classList.add('hidden');
         el.grid.classList.remove('loading');
+        el.grid.classList.remove('revealed'); // Remove revealed state from previous puzzle
         updateTabs();
         render();
         updateURL();
@@ -387,9 +391,11 @@ async function resumeGame(saved) {
         state.selected = null;
         state.difficulty = saved.difficulty;
         state.startTime = saved.startTime;
+        state.revealed = false;
         
         el.date.textContent = formatDate(puzzle.date);
         el.error.classList.add('hidden');
+        el.grid.classList.remove('revealed'); // Ensure clean state
         updateTabs();
         render();
         updateURL();
@@ -627,6 +633,7 @@ function select(row, col) {
 
 function enter(num) {
     if (!state.selected) return;
+    if (state.revealed) return; // Can't edit after reveal
     const { row, col } = state.selected;
     if (state.puzzle.grid[row][col] !== 0) return; // Can't edit given
     
@@ -693,6 +700,8 @@ function togglePencil() {
 }
 
 function hint() {
+    if (state.revealed) return; // Can't use hint after reveal
+    
     const empty = [];
     for (let r = 0; r < 9; r++) {
         for (let c = 0; c < 9; c++) {
@@ -724,7 +733,99 @@ function hint() {
     checkWin();
 }
 
+// ===== Reveal Solution =====
+function revealSolution() {
+    // Already revealed or solved? Skip
+    if (state.revealed) {
+        toast('Solution already revealed');
+        return;
+    }
+    
+    // Check if already solved
+    let solved = true;
+    for (let r = 0; r < 9 && solved; r++) {
+        for (let c = 0; c < 9 && solved; c++) {
+            if (state.grid[r][c] !== state.puzzle.solution[r][c]) {
+                solved = false;
+            }
+        }
+    }
+    if (solved) {
+        toast('✓ Already solved!');
+        return;
+    }
+    
+    modal({
+        icon: '👁️',
+        title: 'See the Solution?',
+        message: 'Sometimes stepping back helps us learn. Ready to reveal the answer?',
+        confirm: 'Show Me',
+        danger: false,
+        onConfirm: doReveal,
+    });
+}
+
+function doReveal() {
+    state.revealed = true;
+    state.selected = null;
+    
+    const cells = el.grid.querySelectorAll('.cell');
+    const revealData = [];
+    
+    // Collect reveal info for each cell
+    for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+            const idx = r * 9 + c;
+            const isClue = state.puzzle.grid[r][c] !== 0;
+            const userVal = state.grid[r][c];
+            const solVal = state.puzzle.solution[r][c];
+            
+            if (!isClue) {
+                const wasEmpty = userVal === 0;
+                const wasIncorrect = userVal !== 0 && userVal !== solVal;
+                revealData.push({ r, c, idx, wasEmpty, wasIncorrect });
+            }
+            
+            // Fill with solution
+            state.grid[r][c] = solVal;
+        }
+    }
+    
+    // Clear notes
+    state.pencil = Array.from({ length: 9 }, () => 
+        Array.from({ length: 9 }, () => new Set())
+    );
+    
+    // Render the solved grid
+    render();
+    
+    // Add revealed class to grid (disables interaction)
+    el.grid.classList.add('revealed');
+    
+    // Staggered animation for revealed cells
+    revealData.forEach(({ r, c, idx, wasEmpty, wasIncorrect }, i) => {
+        setTimeout(() => {
+            const cell = el.grid.querySelectorAll('.cell')[idx];
+            cell.classList.add('revealed');
+            if (wasEmpty) cell.classList.add('was-empty');
+            if (wasIncorrect) cell.classList.add('was-incorrect');
+        }, i * 20); // 20ms stagger
+    });
+    
+    // Clear saved game state
+    clearSavedGame();
+    
+    const incorrectCount = revealData.filter(d => d.wasIncorrect).length;
+    if (incorrectCount > 0) {
+        toast(`Solution revealed • ${incorrectCount} were incorrect`);
+    } else {
+        toast('Solution revealed ✨');
+    }
+}
+
 function check() {
+    if (state.revealed) return; // Can't check after reveal
+    
     // Already solved? Quick exit
     let solved = true;
     for (let r = 0; r < 9; r++) {
@@ -947,6 +1048,8 @@ function doReset() {
     state.history = [];
     state.selected = null;
     state.startTime = Date.now();
+    state.revealed = false;
+    el.grid.classList.remove('revealed'); // Re-enable interaction
     clearSavedGame();
     render();
     toast('Puzzle reset');
@@ -989,6 +1092,7 @@ function onKey(e) {
     // Shortcuts
     if (key === 'p' || key === 'P') { togglePencil(); e.preventDefault(); }
     if (key === 'h' || key === 'H') { hint(); e.preventDefault(); }
+    if (key === 'r' || key === 'R') { revealSolution(); e.preventDefault(); }
     if (key === 'z' && (e.metaKey || e.ctrlKey)) { undo(); e.preventDefault(); }
 }
 
@@ -1019,6 +1123,7 @@ function init() {
     el.btnErase.onclick = erase;
     el.btnHint.onclick = hint;
     el.btnCheck.onclick = check;
+    el.btnReveal.onclick = revealSolution;
     el.btnUndo.onclick = undo;
     el.btnReset.onclick = reset;
     
