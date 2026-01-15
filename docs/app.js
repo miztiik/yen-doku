@@ -1159,7 +1159,6 @@ function onKey(e) {
     // Shortcuts
     if (key === 'p' || key === 'P') { togglePencil(); e.preventDefault(); }
     if (key === 'h' || key === 'H') { hint(); e.preventDefault(); }
-    if (key === 'r' || key === 'R') { revealSolution(); e.preventDefault(); }
     if (key === 'z' && (e.metaKey || e.ctrlKey)) { undo(); e.preventDefault(); }
 }
 
