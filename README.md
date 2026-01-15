@@ -2,8 +2,7 @@
 
 A daily Sudoku puzzle game with four difficulty levels, keyboard navigation, and offline support.
 
-[![Daily Puzzle Generation](https://github.com/miztiik/yen-doku/actions/workflows/daily-generate.yml/badge.svg)](https://github.com/miztiik/yen-doku/actions/workflows/daily-generate.yml)
-[![CI](https://github.com/miztiik/yen-doku/actions/workflows/ci.yml/badge.svg)](https://github.com/miztiik/yen-doku/actions/workflows/ci.yml)
+[![Daily Puzzle Generation](https://github.com/miztiik/yen-doku/actions/workflows/daily-generate.yml/badge.svg)](https://github.com/miztiik/yen-doku/actions/workflows/daily-generate.yml) [![CI](https://github.com/miztiik/yen-doku/actions/workflows/ci.yml/badge.svg)](https://github.com/miztiik/yen-doku/actions/workflows/ci.yml)
 
 ## Play
 
