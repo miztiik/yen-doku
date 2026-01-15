@@ -1,0 +1,537 @@
+/**
+ * Gattai CSS - Multi-Grid Sudoku Styles
+ * Extends base style.css
+ */
+
+/* ===== Gattai-Specific Variables ===== */
+:root {
+    /* Cell sizing */
+    --gattai-cell-size: min(28px, calc((100vw - 48px) / 21));
+    --gattai-cell-size-twin: min(36px, calc((100vw - 48px) / 15));
+    
+    /* Shared cell styling */
+    --shared-bg: rgba(124, 58, 237, 0.08);
+    --shared-border: rgba(124, 58, 237, 0.4);
+    
+    /* Grid gaps */
+    --grid-gap: 2px;
+    --box-border: 2px;
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --shared-bg: rgba(124, 58, 237, 0.15);
+        --shared-border: rgba(124, 58, 237, 0.6);
+    }
+}
+
+/* ===== Gattai App Container ===== */
+.gattai-app {
+    max-width: 100%;
+}
+
+.gattai-app header h1 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.logo-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.gattai-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.5em;
+    font-weight: 600;
+    padding: 6px 12px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: var(--radius-full);
+    vertical-align: middle;
+    line-height: 1;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* ===== Mode Picker ===== */
+.mode-picker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: var(--space-md);
+    width: 100%;
+    max-width: min(580px, 95vmin);
+}
+
+.mode-tabs {
+    display: flex;
+    background: var(--bg-elevated);
+    padding: 4px;
+    border-radius: var(--radius-full);
+    gap: 2px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.mode-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.mode-tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 16px;
+    min-width: 70px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border-radius: var(--radius-full);
+    white-space: nowrap;
+    transition: all 0.2s var(--ease);
+}
+
+.mode-icon {
+    font-size: 1.1em;
+    line-height: 1;
+}
+
+/* Twin mode CSS icons - two boxes with smaller one outside the corner */
+.twin-icon {
+    position: relative;
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+}
+
+/* Large box */
+.twin-icon::before {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border: 1.5px solid currentColor;
+    border-radius: 1px;
+}
+
+/* Small box - positioned outside the corner */
+.twin-icon::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border: 1.5px solid currentColor;
+    border-radius: 1px;
+    background: currentColor;
+    opacity: 0.4;
+}
+
+/* NW: small box top-left outside */
+.twin-icon.nw::before {
+    bottom: 0;
+    right: 0;
+}
+.twin-icon.nw::after {
+    top: 0;
+    left: 0;
+}
+
+/* NE: small box top-right outside */
+.twin-icon.ne::before {
+    bottom: 0;
+    left: 0;
+}
+.twin-icon.ne::after {
+    top: 0;
+    right: 0;
+}
+
+/* SW: small box bottom-left outside */
+.twin-icon.sw::before {
+    top: 0;
+    right: 0;
+}
+.twin-icon.sw::after {
+    bottom: 0;
+    left: 0;
+}
+
+/* SE: small box bottom-right outside */
+.twin-icon.se::before {
+    top: 0;
+    left: 0;
+}
+.twin-icon.se::after {
+    bottom: 0;
+    right: 0;
+}
+
+.mode-tab:hover {
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+}
+
+.mode-tab.active {
+    background: var(--accent);
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.mode-icon {
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.mode-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ===== Timer Container ===== */
+.timer-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--space-md);
+}
+
+.timer {
+    font-family: var(--font-mono);
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    padding: var(--space-xs) var(--space-md);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+}
+
+/* ===== Gattai Main Container ===== */
+.gattai-main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--space-md);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ===== Gattai Grid Container ===== */
+.gattai-container {
+    position: relative;
+    display: grid;
+    background: var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    touch-action: pan-x pan-y pinch-zoom;
+}
+
+/* Samurai mode: 21×21 logical grid */
+.gattai-container.mode-samurai {
+    --cell-size: var(--gattai-cell-size);
+    width: calc(var(--cell-size) * 21 + var(--grid-gap) * 4);
+    height: calc(var(--cell-size) * 21 + var(--grid-gap) * 4);
+}
+
+/* Twin modes: 15×15 logical grid */
+.gattai-container.mode-twin-nw,
+.gattai-container.mode-twin-ne,
+.gattai-container.mode-twin-sw,
+.gattai-container.mode-twin-se {
+    --cell-size: var(--gattai-cell-size-twin);
+    width: calc(var(--cell-size) * 15 + var(--grid-gap) * 2);
+    height: calc(var(--cell-size) * 15 + var(--grid-gap) * 2);
+}
+
+/* ===== Individual 9×9 Grid ===== */
+.gattai-grid {
+    position: absolute;
+    display: grid;
+    grid-template-columns: repeat(9, var(--cell-size));
+    grid-template-rows: repeat(9, var(--cell-size));
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s var(--ease), transform 0.2s var(--ease);
+    z-index: 1;
+}
+
+/* Position grids based on CSS custom properties set by JS */
+.gattai-grid {
+    top: calc(var(--grid-row) * var(--cell-size));
+    left: calc(var(--grid-col) * var(--cell-size));
+}
+
+/* Active grid elevation */
+.gattai-grid.active {
+    z-index: 10;
+    box-shadow: var(--shadow-lg), 0 0 0 2px var(--accent);
+}
+
+/* ===== Cell Styles ===== */
+.gattai-grid .cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--cell-size);
+    height: var(--cell-size);
+    font-family: var(--font-mono);
+    font-size: calc(var(--cell-size) * 0.55);
+    font-weight: 500;
+    color: var(--cell-user);
+    background: var(--cell-empty-bg);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s var(--ease), transform 0.1s var(--ease);
+    position: relative;
+}
+
+/* Given cells */
+.gattai-grid .cell.given {
+    color: var(--cell-given);
+    font-weight: 600;
+}
+
+/* Box borders */
+.gattai-grid .cell.box-top {
+    border-top: var(--box-border) solid var(--border-strong);
+}
+
+.gattai-grid .cell.box-left {
+    border-left: var(--box-border) solid var(--border-strong);
+}
+
+.gattai-grid .cell.box-bottom {
+    border-bottom: var(--box-border) solid var(--border-strong);
+}
+
+.gattai-grid .cell.box-right {
+    border-right: var(--box-border) solid var(--border-strong);
+}
+
+/* Shared cells (overlapping region) */
+.gattai-grid .cell.shared {
+    background: var(--shared-bg);
+}
+
+.gattai-grid .cell.shared::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--shared-border);
+    pointer-events: none;
+}
+
+/* Selected cell */
+.gattai-grid .cell.selected {
+    background: var(--cell-selected);
+    transform: scale(1.02);
+    z-index: 5;
+}
+
+/* Related cells (same row/col/box) */
+.gattai-grid .cell.related {
+    background: var(--cell-related);
+}
+
+/* Conflict cells */
+.gattai-grid .cell.conflict {
+    background: var(--cell-conflict);
+}
+
+/* User-entered values */
+.gattai-grid .cell.user {
+    color: var(--cell-user);
+}
+
+/* ===== Pencil Marks ===== */
+.gattai-grid .cell.has-pencil {
+    padding: 0;
+}
+
+.pencil-marks {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    width: 100%;
+    height: 100%;
+}
+
+.pencil-mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(var(--cell-size) * 0.25);
+    font-weight: 400;
+    color: var(--text-tertiary);
+    line-height: 1;
+}
+
+/* ===== Responsive Adjustments ===== */
+
+/* Large screens */
+@media (min-width: 1024px) {
+    :root {
+        --gattai-cell-size: 32px;
+        --gattai-cell-size-twin: 40px;
+    }
+}
+
+/* Medium screens (tablet) */
+@media (min-width: 768px) and (max-width: 1023px) {
+    :root {
+        --gattai-cell-size: 28px;
+        --gattai-cell-size-twin: 36px;
+    }
+}
+
+/* Small screens (mobile) */
+@media (max-width: 767px) {
+    :root {
+        --gattai-cell-size: min(22px, calc((100vw - 32px) / 21));
+        --gattai-cell-size-twin: min(30px, calc((100vw - 32px) / 15));
+    }
+    
+    .mode-tabs {
+        padding: 2px;
+    }
+    
+    .mode-tab {
+        padding: var(--space-xs) var(--space-sm);
+        min-width: 50px;
+    }
+    
+    .mode-icon {
+        font-size: 1rem;
+    }
+    
+    .mode-label {
+        font-size: 0.55rem;
+    }
+    
+    .gattai-main {
+        padding: var(--space-sm);
+    }
+    
+    .timer {
+        font-size: 1rem;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 400px) {
+    :root {
+        --gattai-cell-size: min(18px, calc((100vw - 16px) / 21));
+        --gattai-cell-size-twin: min(26px, calc((100vw - 16px) / 15));
+    }
+    
+    .mode-label {
+        display: none;
+    }
+    
+    .mode-tab {
+        min-width: 40px;
+    }
+}
+
+/* ===== Touch Device Optimizations ===== */
+@media (hover: none) and (pointer: coarse) {
+    .gattai-grid .cell {
+        /* Larger touch targets */
+        min-width: 32px;
+        min-height: 32px;
+    }
+    
+    .gattai-grid .cell:active {
+        transform: scale(0.95);
+    }
+}
+
+/* ===== Print Styles ===== */
+@media print {
+    .mode-picker,
+    .difficulty-picker,
+    .toolbar,
+    .numpad,
+    .timer-container,
+    .date-nav {
+        display: none !important;
+    }
+    
+    .gattai-container {
+        box-shadow: none;
+        border: 2px solid black;
+    }
+    
+    .gattai-grid {
+        box-shadow: none;
+    }
+    
+    .gattai-grid .cell {
+        border-color: #999;
+    }
+    
+    .gattai-grid .cell.box-top,
+    .gattai-grid .cell.box-left,
+    .gattai-grid .cell.box-bottom,
+    .gattai-grid .cell.box-right {
+        border-color: black;
+    }
+}
+
+/* ===== Reduced Motion ===== */
+@media (prefers-reduced-motion: reduce) {
+    .gattai-grid,
+    .gattai-grid .cell,
+    .mode-tab {
+        transition: none;
+    }
+}
+
+/* ===== Focus Styles ===== */
+.gattai-grid .cell:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
+
+.gattai-grid .cell:focus:not(:focus-visible) {
+    outline: none;
+}
+
+.mode-tab:focus-visible,
+.tab:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* ===== Check & Hint Animations ===== */
+.cell.check-error {
+    animation: shake 0.5s ease-in-out;
+    background: var(--error) !important;
+    color: white !important;
+}
+
+.cell.hint-reveal {
+    animation: pulse-hint 0.8s ease-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-3px); }
+    40%, 80% { transform: translateX(3px); }
+}
+
+@keyframes pulse-hint {
+    0% { background: var(--success); transform: scale(1.1); }
+    100% { background: transparent; transform: scale(1); }
+}

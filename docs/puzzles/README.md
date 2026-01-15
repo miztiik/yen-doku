@@ -14,8 +14,19 @@ puzzles/
     ├── hard/
     │   ├── 2026-01-11-001.json
     │   └── 2026-01-11-002.json    # Optional: multiple puzzles per day
-    └── extreme/
-        └── 2026-01-11-001.json
+    ├── extreme/
+    │   └── 2026-01-11-001.json
+    │
+    └── gattai/                    # Multi-grid Sudoku modes
+        ├── samurai/               # Classic 5-grid Samurai
+        │   ├── easy/
+        │   ├── medium/
+        │   ├── hard/
+        │   └── extreme/
+        ├── twin-nw/               # 2-grid "Horizon" (NW overlap)
+        ├── twin-ne/               # 2-grid "Sunrise" (NE overlap)
+        ├── twin-sw/               # 2-grid "Sunset" (SW overlap)
+        └── twin-se/               # 2-grid "Eclipse" (SE overlap)
 ```
 
 ## Convention-Based Discovery (No Index Required)
@@ -188,3 +199,104 @@ python scripts/monte_carlo_clues.py -n 100
 ---
 
 **Last Updated**: 2026-01-13
+
+---
+
+## Gattai Multi-Grid Puzzles
+
+Gattai puzzles are multi-grid Sudoku variants where grids share overlapping 3×3 boxes.
+
+### Gattai Modes
+
+| Mode | Display Name | Grids | Layout | Overlap Pattern |
+|------|--------------|-------|--------|-----------------|
+| `samurai` | Samurai | 5 | 21×21 logical | Center grid overlaps all 4 corners |
+| `twin-nw` | Horizon | 2 | 15×15 logical | NW overlap (grids side by side) |
+| `twin-ne` | Sunrise | 2 | 15×15 logical | NE overlap (grids side by side) |
+| `twin-sw` | Sunset | 2 | 15×15 logical | SW overlap (grids stacked) |
+| `twin-se` | Eclipse | 2 | 15×15 logical | SE overlap (grids stacked) |
+
+### Gattai Puzzle JSON Schema
+
+```json
+{
+  "date": "YYYY-MM-DD",
+  "mode": "samurai|twin-nw|twin-ne|twin-sw|twin-se",
+  "difficulty": "easy|medium|hard|extreme",
+  "clueCount": <integer>,
+  "grids": [
+    {
+      "id": "grid-0",
+      "grid": [[9x9 array, 0=empty, 1-9=clue]],
+      "solution": [[9x9 array, all 1-9]],
+      "position": {"row": 0, "col": 0}
+    },
+    {
+      "id": "grid-1",
+      "grid": [[9x9 array]],
+      "solution": [[9x9 array]],
+      "position": {"row": 0, "col": 6}
+    }
+    // ... additional grids for mode
+  ],
+  "overlaps": [
+    {"grid1": "grid-0", "grid2": "grid-1", "type": "3x3", "cells": [...]}
+  ]
+}
+```
+
+### Gattai Clue Count Thresholds
+
+For **twin modes** (2 grids, ~20 cells shared):
+
+| Difficulty | Clue Range | Empty Cells |
+|------------|------------|-------------|
+| Easy       | 80-90      | 68-78       |
+| Medium     | 64-79      | 79-94       |
+| Hard       | 52-63      | 95-106      |
+| Extreme    | 34-51      | 107-124     |
+
+For **samurai mode** (5 grids, ~36 cells shared):
+
+| Difficulty | Clue Range | Empty Cells |
+|------------|------------|-------------|
+| Easy       | 160-180    | 189-209     |
+| Medium     | 130-159    | 210-239     |
+| Hard       | 100-129    | 240-269     |
+| Extreme    | 68-99      | 270-301     |
+
+### Gattai Generation
+
+Gattai puzzles use a center-first generation strategy:
+
+1. **Samurai**: Generate center grid → propagate overlaps to 4 corner grids
+2. **Twin modes**: Generate first grid → propagate overlap to second grid
+3. **Clue removal**: Remove clues while maintaining unique solution across ALL grids
+
+### Gattai CI/CD
+
+Gattai puzzles are generated daily at 00:15 UTC (10 minutes after standard puzzles):
+
+```yaml
+# .github/workflows/generate-gattai.yml
+on:
+  schedule:
+    - cron: '15 0 * * *'
+```
+
+**Schedule**: Alternating difficulty per day:
+- Even days: easy + medium
+- Odd days: hard + extreme
+
+### Generate Gattai Manually
+
+```bash
+# Generate Samurai puzzle
+python scripts/generate_gattai.py --mode samurai --difficulty medium
+
+# Generate twin-mode puzzle
+python scripts/generate_gattai.py --mode twin-nw --difficulty hard --date 2026-01-15
+
+# Validate existing puzzle
+python scripts/generate_gattai.py --validate-only docs/puzzles/2026/gattai/samurai/medium/2026-01-15-001.json
+```

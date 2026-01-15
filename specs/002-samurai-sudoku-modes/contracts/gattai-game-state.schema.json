@@ -1,0 +1,141 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://yen-doku.github.io/schemas/gattai-game-state.json",
+  "title": "GattaiGameState",
+  "description": "Browser localStorage schema for saved Gattai game state",
+  "type": "object",
+  "required": ["date", "mode", "difficulty", "currentGrids", "startTime"],
+  "properties": {
+    "date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "description": "Puzzle date"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["samurai", "twin-nw", "twin-ne", "twin-sw", "twin-se"],
+      "description": "Gattai mode"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": ["easy", "medium", "hard", "extreme"],
+      "description": "Difficulty level"
+    },
+    "currentGrids": {
+      "type": "object",
+      "description": "Current user-entered values per grid",
+      "additionalProperties": {
+        "$ref": "#/definitions/Grid9x9"
+      }
+    },
+    "pencilMarks": {
+      "type": "object",
+      "description": "Pencil marks per grid (optional)",
+      "additionalProperties": {
+        "$ref": "#/definitions/PencilGrid"
+      }
+    },
+    "startTime": {
+      "type": "integer",
+      "description": "Timer start timestamp (Unix ms)"
+    },
+    "elapsedBeforePause": {
+      "type": "integer",
+      "description": "Elapsed time before last pause (ms)",
+      "default": 0
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Move"
+      },
+      "maxItems": 100,
+      "description": "Undo history stack"
+    },
+    "revealed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether solution was revealed"
+    }
+  },
+  "definitions": {
+    "Grid9x9": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9
+        },
+        "minItems": 9,
+        "maxItems": 9
+      },
+      "minItems": 9,
+      "maxItems": 9
+    },
+    "PencilGrid": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9
+          },
+          "uniqueItems": true
+        },
+        "minItems": 9,
+        "maxItems": 9
+      },
+      "minItems": 9,
+      "maxItems": 9,
+      "description": "9x9 grid where each cell is an array of pencil mark values"
+    },
+    "Move": {
+      "type": "object",
+      "required": ["type", "gridId", "row", "col"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["enter", "erase", "pencil"],
+          "description": "Type of move"
+        },
+        "gridId": {
+          "type": "string",
+          "description": "Affected grid ID"
+        },
+        "row": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8
+        },
+        "col": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8
+        },
+        "prevValue": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9
+        },
+        "newValue": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9
+        },
+        "prevPencil": {
+          "type": "array",
+          "items": { "type": "integer" }
+        },
+        "newPencil": {
+          "type": "array",
+          "items": { "type": "integer" }
+        }
+      }
+    }
+  }
+}
