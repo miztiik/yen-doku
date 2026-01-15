@@ -13,8 +13,8 @@ You are a **Principal Software Engineer** designing and implementing a **Daily S
 
 Design a system that:
 
-* Generates **one valid Sudoku puzzle per day**
-* Guarantees **exactly one solution**
+* Generates **four valid Sudoku puzzles per day** (one per difficulty: easy, medium, hard, extreme)
+* Guarantees **exactly one solution** per puzzle
 * Publishes the puzzle as a **versioned artifact in a GitHub repository**
 * Serves the puzzle via a **static website hosted on GitHub Pages**
 * Uses **only GitHub free-tier features**
@@ -77,8 +77,8 @@ yen-doku/
 │
 ├── docs/                      # ← GitHub Pages serves from here
 │   ├── index.html
-│   ├── app.js                # ~750 lines, client game logic
-│   ├── style.css             # ~1100 lines, Apple HIG-inspired
+│   ├── app.js                # ~1250 lines, client game logic
+│   ├── style.css             # ~1350 lines, Apple HIG-inspired
 │   ├── sw.js                 # Service Worker for offline
 │   └── puzzles/              # ← Puzzles inside docs for Pages
 │       └── 2026/
@@ -104,7 +104,8 @@ yen-doku/
 │   ├── test_difficulty.py
 │   └── test_generate.py
 │
-├── system-design.md          # This file — architecture & constraints
+├── SYSTEM_DESIGN.md          # This file — architecture & constraints
+├── DESIGN_PRINCIPLES.md      # Web app design patterns & philosophy
 ├── requirements.txt
 ├── README.md
 └── .gitignore
@@ -133,7 +134,8 @@ Each daily puzzle file **must** contain:
 ```json
 {
   "date": "YYYY-MM-DD",
-  "difficulty": "easy|medium|hard",
+  "difficulty": "easy|medium|hard|extreme",
+  "clueCount": 17-45,
   "grid": [[0-9 x9 rows]],
   "solution": [[1-9 x9 rows]]
 }
@@ -170,10 +172,11 @@ If validation fails:
 
 ### 8. CI Behavior
 
-* Runs once per day
-* Generates **exactly one puzzle**
-* Uses deterministic logic where possible
-* Commits only when generation + validation succeed
+* Runs once per day (00:05 UTC)
+* Generates **four puzzles** (one per difficulty: easy, medium, hard, extreme)
+* Uses deterministic seeding for reproducibility
+* Commits only when all generation + validation succeed
+* Generation is idempotent — safe to run twice
 * Keeps runtime well below GitHub free-tier limits
 
 ---
@@ -228,7 +231,7 @@ The frontend follows **Apple Human Interface Guidelines** principles:
 * **Save Triggers** — After each move (enter, erase, hint, undo)
 * **Load Trigger** — On puzzle load, restores saved state if exists
 * **Clear Triggers** — On puzzle completion (victory) or reset
-* **Auto-Cleanup** — States older than 30 days deleted on app init
+* **Auto-Cleanup** — States older than 7 days deleted on app init
 * **Timer Behavior** — Pauses when tab hidden, resumes on visible
 
 This enables:
@@ -277,10 +280,11 @@ The system must **not** include:
 
 The system is considered correct if:
 
-* A new valid Sudoku puzzle appears daily in Git history
-* Each puzzle has exactly one solution
-* The puzzle renders correctly on GitHub Pages
+* Four new valid Sudoku puzzles appear daily in Git history (one per difficulty)
+* Each puzzle has exactly one solution (verified by solver)
+* The puzzles render correctly on GitHub Pages
 * The system operates indefinitely without manual intervention
+* Users can play offline with previously loaded puzzles
 
 ---
 
