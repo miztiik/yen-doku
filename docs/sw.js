@@ -3,12 +3,15 @@
  * Provides offline support with cache-first strategy for puzzles
  */
 
-const CACHE_NAME = 'yen-doku-v1';
+const CACHE_NAME = 'yen-doku-v2';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
     '/style.css',
     '/app.js',
+    '/gattai.html',
+    '/gattai.css',
+    '/gattai.js',
 ];
 
 // Install event - cache static assets

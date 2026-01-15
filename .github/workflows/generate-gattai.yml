@@ -1,0 +1,228 @@
+name: Daily Gattai Puzzle Generation
+
+on:
+  schedule:
+    # Run daily at 00:15 UTC (10 minutes after standard puzzles)
+    - cron: '15 0 * * *'
+  workflow_dispatch:
+    # Allow manual trigger
+    inputs:
+      date:
+        description: 'Date to generate puzzles for (YYYY-MM-DD)'
+        required: false
+        default: ''
+      mode:
+        description: 'Specific mode to generate (or "all" for all modes)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - samurai
+          - twin-nw
+          - twin-ne
+          - twin-sw
+          - twin-se
+
+env:
+  PUZZLE_DIR: docs/puzzles
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Determine date and schedule
+        id: date
+        run: |
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            TARGET_DATE="${{ github.event.inputs.date }}"
+          else
+            TARGET_DATE="$(date -u +%Y-%m-%d)"
+          fi
+          echo "date=${TARGET_DATE}" >> $GITHUB_OUTPUT
+          echo "year=${TARGET_DATE:0:4}" >> $GITHUB_OUTPUT
+          
+          # Determine difficulty schedule based on day of week
+          # Even days: easy + medium, Odd days: hard + extreme
+          DAY_OF_MONTH=$(date -d "${TARGET_DATE}" +%d)
+          if [ $((DAY_OF_MONTH % 2)) -eq 0 ]; then
+            echo "difficulties=easy medium" >> $GITHUB_OUTPUT
+            echo "📅 Even day (${DAY_OF_MONTH}): Generating easy + medium"
+          else
+            echo "difficulties=hard extreme" >> $GITHUB_OUTPUT
+            echo "📅 Odd day (${DAY_OF_MONTH}): Generating hard + extreme"
+          fi
+
+      - name: Determine modes to generate
+        id: modes
+        run: |
+          MODE_INPUT="${{ github.event.inputs.mode }}"
+          if [ -z "$MODE_INPUT" ] || [ "$MODE_INPUT" = "all" ]; then
+            echo "modes=samurai twin-nw twin-ne twin-sw twin-se" >> $GITHUB_OUTPUT
+            echo "🎯 Generating all 5 modes"
+          else
+            echo "modes=$MODE_INPUT" >> $GITHUB_OUTPUT
+            echo "🎯 Generating single mode: $MODE_INPUT"
+          fi
+
+      - name: Generate Gattai puzzles
+        run: |
+          MODES="${{ steps.modes.outputs.modes }}"
+          DIFFICULTIES="${{ steps.date.outputs.difficulties }}"
+          DATE="${{ steps.date.outputs.date }}"
+          
+          echo "📦 Generation Plan:"
+          echo "  Date: $DATE"
+          echo "  Modes: $MODES"
+          echo "  Difficulties: $DIFFICULTIES"
+          echo ""
+          
+          GENERATED=0
+          SKIPPED=0
+          FAILED=0
+          
+          for mode in $MODES; do
+            for diff in $DIFFICULTIES; do
+              YEAR="${{ steps.date.outputs.year }}"
+              OUTPUT_DIR="${{ env.PUZZLE_DIR }}/${YEAR}/gattai/${mode}/${diff}"
+              OUTPUT_FILE="${OUTPUT_DIR}/${DATE}-001.json"
+              
+              # Skip if file already exists
+              if [ -f "$OUTPUT_FILE" ]; then
+                echo "⏭️ Skipping ${mode}/${diff}: Already exists"
+                SKIPPED=$((SKIPPED + 1))
+                continue
+              fi
+              
+              echo "🎲 Generating ${mode} / ${diff}..."
+              mkdir -p "$OUTPUT_DIR"
+              
+              if python scripts/generate_gattai.py \
+                  --mode "$mode" \
+                  --difficulty "$diff" \
+                  --date "$DATE" \
+                  --output "$OUTPUT_FILE" \
+                  --max-retries 10 \
+                  --verbose; then
+                echo "✅ Generated: $OUTPUT_FILE"
+                GENERATED=$((GENERATED + 1))
+              else
+                echo "❌ Failed: ${mode}/${diff}"
+                FAILED=$((FAILED + 1))
+              fi
+              echo ""
+            done
+          done
+          
+          echo "📊 Summary:"
+          echo "  Generated: $GENERATED"
+          echo "  Skipped: $SKIPPED"
+          echo "  Failed: $FAILED"
+          
+          # Fail if any generation failed
+          if [ "$FAILED" -gt 0 ]; then
+            echo "::error::$FAILED puzzle(s) failed to generate"
+            exit 1
+          fi
+          
+          # Warn if nothing was generated (all skipped)
+          if [ "$GENERATED" -eq 0 ] && [ "$SKIPPED" -gt 0 ]; then
+            echo "::warning::All puzzles already exist, nothing generated"
+          fi
+
+      - name: Validate generated puzzles
+        run: |
+          MODES="${{ steps.modes.outputs.modes }}"
+          DIFFICULTIES="${{ steps.date.outputs.difficulties }}"
+          DATE="${{ steps.date.outputs.date }}"
+          YEAR="${{ steps.date.outputs.year }}"
+          
+          echo "🔍 Validating generated puzzles..."
+          
+          VALIDATED=0
+          ERRORS=0
+          
+          for mode in $MODES; do
+            for diff in $DIFFICULTIES; do
+              FILE="${{ env.PUZZLE_DIR }}/${YEAR}/gattai/${mode}/${diff}/${DATE}-001.json"
+              
+              if [ ! -f "$FILE" ]; then
+                continue  # File might not exist if skipped
+              fi
+              
+              echo "Validating: $FILE"
+              if python scripts/generate_gattai.py --validate-only "$FILE"; then
+                echo "✅ Valid: ${mode}/${diff}"
+                VALIDATED=$((VALIDATED + 1))
+              else
+                echo "❌ Invalid: ${mode}/${diff}"
+                ERRORS=$((ERRORS + 1))
+              fi
+            done
+          done
+          
+          echo ""
+          echo "📊 Validation Summary:"
+          echo "  Validated: $VALIDATED"
+          echo "  Errors: $ERRORS"
+          
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "::error::$ERRORS puzzle(s) failed validation"
+            exit 1
+          fi
+
+      - name: Check for changes
+        id: check
+        run: |
+          git add ${{ env.PUZZLE_DIR }}/
+          
+          if git diff --staged --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "📭 No new puzzles to commit"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            CHANGED=$(git diff --staged --stat | tail -1)
+            echo "📬 Changes detected: $CHANGED"
+          fi
+
+      - name: Commit and push
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Build commit message with mode info
+          MODES="${{ steps.modes.outputs.modes }}"
+          DIFFICULTIES="${{ steps.date.outputs.difficulties }}"
+          DATE="${{ steps.date.outputs.date }}"
+          
+          # Count modes
+          MODE_COUNT=$(echo $MODES | wc -w)
+          if [ "$MODE_COUNT" -eq 5 ]; then
+            MODE_DESC="all modes"
+          else
+            MODE_DESC="$MODES"
+          fi
+          
+          git commit -m "🎯 Add Gattai puzzles for $DATE ($MODE_DESC)"
+          git push
+          
+          echo "✅ Committed and pushed Gattai puzzles for $DATE"
