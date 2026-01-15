@@ -2,7 +2,7 @@
 
 **Purpose**: Track implementation progress of all features  
 **Created**: 2026-01-11  
-**Last Updated**: 2026-01-13  
+**Last Updated**: 2026-01-15  
 **Spec**: [spec.md](spec.md)  
 **Design System**: [design-system.md](design-system.md)
 
@@ -182,6 +182,20 @@
 
 ---
 
+## Bugfix Sprint (2026-01-15)
+
+| # | Bug | Status | Notes |
+|---|-----|--------|-------|
+| 090 | Grid alignment shifts with pencil marks | ✅ | Pencil marks now absolute positioned |
+| 091 | Tooltip persists after button click (touch) | ✅ | JS blur + CSS `@media (hover: none)` |
+| 092 | Hint button needs visual glow | ✅ | `@keyframes hintGlow` animation added |
+| 093 | Erase button touch target off-center | ✅ | SVG translateX(1px) fix |
+| 094 | Changing difficulty on old date jumps to today | ✅ | `load()` preserves `state.puzzle.date` |
+| 095 | localStorage not cleaned after 7 days | ✅ | `cleanupOldSaves()` on app init |
+| 096 | R shortcut conflicts with browser refresh | ✅ | Removed R keyboard binding |
+
+---
+
 ## Summary
 
 | Priority | Total | Completed | Parked/Skipped | Remaining |
@@ -191,7 +205,8 @@
 | P3 | 9 | 7 | 2 | 0 |
 | Infra | 5 | 5 | 0 | 0 |
 | UI/UX Enhancements | 19 | 19 | 0 | 0 |
-| **Total** | **89** | **85** | **4** | **0** |
+| Bugfixes | 7 | 7 | 0 | 0 |
+| **Total** | **96** | **92** | **4** | **0** |
 
 **Parked/Skipped Items** (4):  
 - #022 — Parked  
@@ -216,3 +231,7 @@
 | 2026-01-13 | Corrected #057/#058 status (not implemented); parked #049, #065; completed #067 |
 | 2026-01-13 | **Implemented #057 & #058**: Reveal Solution button with positive modal, staggered animation, was-incorrect highlighting |
 | 2026-01-13 | **Phase 7 Complete**: README updated, 34 Python tests passing, all puzzle schemas validated |
+| 2026-01-15 | **Bugfix sprint**: Fixed 6 UI/navigation bugs (grid alignment, tooltip persistence, hint glow, erase centering, date navigation, 7-day cache cleanup) |
+| 2026-01-15 | Removed R keyboard shortcut for Reveal Solution (conflicts with browser hard refresh) |
+| 2026-01-15 | Updated constitution to v1.2.0 (added principles VI-VIII, UX/Storage contracts) |
+| 2026-01-15 | Updated SYSTEM_DESIGN.md to match implementation (4 puzzles/day, 7-day retention, extreme difficulty) |

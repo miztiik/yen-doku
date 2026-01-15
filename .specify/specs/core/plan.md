@@ -8,12 +8,14 @@
 ## Summary
 
 Build a daily Sudoku puzzle system that:
-1. **Generates** one valid puzzle per day via GitHub Actions (Python)
-2. **Validates** every puzzle has exactly one solution before commit
-3. **Serves** puzzles as static JSON via GitHub Pages
-4. **Renders** an interactive web UI for solving (JavaScript)
+1. **Generates** four valid puzzles per day via GitHub Actions (Python) ✅
+2. **Validates** every puzzle has exactly one solution before commit ✅
+3. **Serves** puzzles as static JSON via GitHub Pages ✅
+4. **Renders** an interactive web UI for solving (JavaScript) ✅
 
 **Technical Approach**: Use `py-sudoku` library for generation/solving, add custom uniqueness validation, pure vanilla JS frontend with no frameworks.
+
+**Status**: ✅ **COMPLETE** — All 7 phases implemented. System is production-ready.
 
 ---
 
@@ -243,15 +245,33 @@ yen-doku/
 
 ## Milestones Summary
 
-| Milestone | Phases | Duration | Key Deliverable |
-|-----------|--------|----------|-----------------|
-| **M1: Engine** | 0-1 | 3 days | Solver + Validator with tests |
-| **M2: Generation** | 2-3 | 2 days | 4-difficulty puzzle creation via CI |
-| **M3: UI + Navigation** | 4 | 2 days | Puzzle renders with difficulty selector |
-| **M4: Interactive** | 5-6 | 3 days | Full solving experience |
-| **M5: Complete** | 7 | 1 day | Production ready |
+| Milestone | Phases | Duration | Key Deliverable | Status |
+|-----------|--------|----------|-----------------|--------|
+| **M1: Engine** | 0-1 | 3 days | Solver + Validator with tests | ✅ Complete |
+| **M2: Generation** | 2-3 | 2 days | 4-difficulty puzzle creation via CI | ✅ Complete |
+| **M3: UI + Navigation** | 4 | 2 days | Puzzle renders with difficulty selector | ✅ Complete |
+| **M4: Interactive** | 5-6 | 3 days | Full solving experience | ✅ Complete |
+| **M5: Complete** | 7 | 1 day | Production ready | ✅ Complete |
 
-**Total Estimated Duration**: 11 days
+**Total Duration**: 11 days (2026-01-11 to 2026-01-13)
+
+---
+
+## Post-Launch Updates
+
+### Bugfix Sprint (2026-01-15)
+All 6 UI/navigation bugs fixed and merged:
+- ✅ Grid alignment with pencil marks (absolute positioning)
+- ✅ Tooltip persistence on touch devices (blur handler + CSS media query)
+- ✅ Hint button glow animation
+- ✅ Erase button centering
+- ✅ Date navigation bug (preserve date on difficulty change)
+- ✅ localStorage 7-day cleanup
+- ✅ Removed R keyboard shortcut (conflicts with browser refresh)
+
+### Documentation Updates (2026-01-15)
+- ✅ Constitution updated to v1.2.0 (added principles VI-VIII, UX/Storage contracts)
+- ✅ SYSTEM_DESIGN.md updated to match implementation
 
 ---
 
@@ -284,10 +304,12 @@ graph LR
 
 ## Next Steps
 
-1. **Run `/tasks`** to generate detailed task breakdown for Phase 0-1
-2. Begin TDD: Write failing tests for solver
-3. Implement solver, get tests green
-4. Repeat for validator, generator, CI, site
+~~1. **Run `/tasks`** to generate detailed task breakdown for Phase 0-1~~
+~~2. Begin TDD: Write failing tests for solver~~
+~~3. Implement solver, get tests green~~
+~~4. Repeat for validator, generator, CI, site~~
+
+**✅ ALL PHASES COMPLETE** — System is live at https://miztiik.github.io/yen-doku/
 
 ---
 
@@ -296,3 +318,6 @@ graph LR
 | Date | Change |
 |------|--------|
 | 2026-01-11 | Initial plan created from spec.md |
+| 2026-01-13 | Marked all milestones complete |
+| 2026-01-15 | Added bugfix sprint section, updated milestone table with status |
+| 2026-01-15 | Updated summary to reflect 4 puzzles/day and completion status |
