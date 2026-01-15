@@ -93,13 +93,13 @@ yen-doku/
 │       └── 2026/
 │           ├── index.json
 │           ├── easy/
-│           │   └── 2026-01-11.json
+│           │   └── 2026-01-11-001.json
 │           ├── medium/
-│           │   └── 2026-01-11.json
+│           │   └── 2026-01-11-001.json
 │           ├── hard/
-│           │   └── 2026-01-11.json
+│           │   └── 2026-01-11-001.json
 │           └── extreme/
-│               └── 2026-01-11.json
+│               └── 2026-01-11-001.json
 │
 ├── requirements.txt
 ├── .gitignore

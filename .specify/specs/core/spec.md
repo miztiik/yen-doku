@@ -41,7 +41,7 @@ As a solver, I can switch between difficulty levels (easy/medium/hard/extreme) u
 1. **Given** I am viewing an extreme puzzle, **When** I click the difficulty selector, **Then** I see options: Easy, Medium, Hard, Extreme
 2. **Given** the selector is visible, **When** I click "Easy", **Then** the easy puzzle for today loads
 3. **Given** I switch difficulty, **When** the new puzzle loads, **Then** the difficulty badge updates to match
-4. **Given** I switch difficulty, **When** I have unsaved progress, **Then** I see a confirmation prompt before switching
+4. ~~**Given** I switch difficulty, **When** I have unsaved progress, **Then** I see a confirmation prompt before switching~~ *(Parked: quick-switch UX preferred)*
 5. **Given** today's puzzle for selected difficulty doesn't exist, **When** I select it, **Then** I see "Puzzle not available" message
 
 ---
@@ -212,14 +212,14 @@ As a returning user, I can browse puzzles from previous days so that I can solve
 ### Functional Requirements
 
 #### Generation & Validation (Python/CI)
-- **FR-001**: System MUST generate exactly one puzzle per calendar day (UTC)
+- **FR-001**: System MUST generate four puzzles per calendar day (one per difficulty: easy, medium, hard, extreme)
 - **FR-002**: System MUST guarantee every puzzle has exactly one solution
 - **FR-003**: System MUST validate all Sudoku rules (rows, columns, 3×3 boxes)
 - **FR-004**: System MUST assign a difficulty rating (easy|medium|hard|extreme) to each puzzle
 - **FR-004a**: System MUST support generating puzzles for a specific target difficulty level
 - **FR-004b**: System MUST validate that generated puzzle's clue count matches target difficulty range
 - **FR-004c**: System MUST retry generation (max 10 attempts) if puzzle doesn't meet difficulty criteria
-- **FR-005**: System MUST store puzzles as JSON files in `docs/puzzles/<year>/<difficulty>/YYYY-MM-DD.json`
+- **FR-005**: System MUST store puzzles as JSON files in `docs/puzzles/<year>/<difficulty>/YYYY-MM-DD-NNN.json` (NNN = variant starting at 001)
 - **FR-005a**: Each difficulty level has its own subfolder (easy/, medium/, hard/, extreme/)
 - **FR-006**: System MUST create year folders automatically if missing
 - **FR-007**: System MUST fail CI and block commit if validation fails
@@ -257,10 +257,10 @@ As a returning user, I can browse puzzles from previous days so that I can solve
 - **FR-026**: Grid MUST use a modern, clean visual design with subtle shadows and rounded corners
 - **FR-027**: Pre-filled clue cells MUST be visually distinct from user-editable cells:
   - Clue cells: Bold font weight (700), dark text (#1a1a2e), subtle background tint (#f0f0f5)
-  - User cells: Normal font weight (400), accent color text (#3a86ff), white background (#ffffff)
+  - User cells: Normal font weight (400), accent color text (#7c3aed), white background (#ffffff)
 - **FR-028**: 3×3 box boundaries MUST use thicker borders (2-3px) vs inner cell borders (1px)
 - **FR-029**: Grid background MUST use alternating subtle tints for 3×3 boxes to aid visual grouping
-- **FR-030**: Selected/focused cell MUST have a prominent highlight (e.g., blue glow, #3a86ff with 30% opacity)
+- **FR-030**: Selected/focused cell MUST have a prominent highlight (e.g., purple glow, #7c3aed with 30% opacity)
 - **FR-031**: Cells in same row/column/box as selected cell MAY have subtle highlight (#f5f5ff)
 - **FR-032**: Conflicting cells MUST show clear error state (red background #ffebee, red border #f44336)
 - **FR-033**: Completed puzzle MUST show success state (green glow animation on grid)
@@ -291,10 +291,10 @@ As a returning user, I can browse puzzles from previous days so that I can solve
 - **FR-025l**: UI MUST gracefully handle missing puzzles for a difficulty level
 
 #### CI/Automation
-- **FR-026**: CI MUST run daily via GitHub Actions cron schedule
-- **FR-027**: CI MUST commit and push only after successful validation
-- **FR-028**: CI MUST use only GitHub free-tier resources
-- **FR-029**: CI MUST complete within 10 minutes (Actions timeout buffer)
+- **FR-036**: CI MUST run daily via GitHub Actions cron schedule
+- **FR-037**: CI MUST commit and push only after successful validation
+- **FR-038**: CI MUST use only GitHub free-tier resources
+- **FR-039**: CI MUST complete within 10 minutes (Actions timeout buffer)
 
 ### Non-Functional Requirements
 
