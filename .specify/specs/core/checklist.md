@@ -103,9 +103,9 @@
 | # | Feature | Status | Notes |
 |---|---------|--------|-------|
 | 046 | Display difficulty badge | ✅ | Color-coded badge below grid |
-| 047 | Color-code by difficulty | ✅ | Green/Yellow/Orange/Red |
+| 047 | Color-code by difficulty | ✅ | Green/Orange/Red/Purple |
 | 048 | Show clue count | ✅ | Badge shows "(28 clues)" |
-| 049 | Filter archive by difficulty | 🅿️ | **Parked** — not necessary |
+| 049 | Filter archive by difficulty | 🅿️ | **Parked** — duplicate of #065 |
 
 ### Difficulty Navigation (P1)
 
