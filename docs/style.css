@@ -332,6 +332,10 @@ main {
     user-select: none;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
+    /* Prevent grid shifting when pencil marks are added */
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .cell:hover {
@@ -463,14 +467,15 @@ main {
     100% { transform: scale(1); background: var(--cell-empty-bg); }
 }
 
-/* Pencil marks */
+/* Pencil marks - absolute positioned to prevent grid shifts */
 .cell .pencil {
+    position: absolute;
+    inset: 2px;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
-    width: 100%;
-    height: 100%;
-    font-size: 0.35em;
+    /* Fixed font size instead of em-relative to prevent layout recalc */
+    font-size: clamp(8px, 1.8vw, 11px);
     font-weight: 600;
     color: var(--text-secondary);
     pointer-events: none;
@@ -544,6 +549,37 @@ main {
     color: #d97706;
 }
 
+/* Hint button glow animation when hint is revealed */
+.tool.tool-hint svg {
+    transition: all 0.3s ease;
+}
+
+.tool.tool-hint.hint-active {
+    animation: hintGlow 0.8s ease-out;
+}
+
+.tool.tool-hint.hint-active svg {
+    stroke: #fbbf24;
+    filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.8));
+}
+
+@keyframes hintGlow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.6);
+    }
+    50% {
+        box-shadow: 0 0 20px 8px rgba(251, 191, 36, 0.4);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(251, 191, 36, 0);
+    }
+}
+
+/* Erase button - center the SVG */
+#btn-erase svg {
+    transform: translateX(1px);
+}
+
 /* Check button - accent purple on hover */
 .tool.tool-check:hover {
     background: var(--accent);
@@ -593,6 +629,13 @@ main {
 @keyframes tooltipIn {
     from { opacity: 0; transform: translateX(-50%) translateY(4px); }
     to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Touch devices: hide tooltips to prevent sticky hover state */
+@media (hover: none) {
+    .tool[data-tooltip]:hover::after {
+        display: none;
+    }
 }
 
 /* ===== Numpad ===== */

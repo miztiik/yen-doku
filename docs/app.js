@@ -30,9 +30,44 @@ const state = {
 
 // ===== Storage Keys =====
 const STORAGE_PREFIX = 'yen-doku-';
+const STORAGE_RETENTION_DAYS = 7;
 
 function getStorageKey(date, difficulty) {
     return `${STORAGE_PREFIX}${date}-${difficulty}`;
+}
+
+/**
+ * Clean up puzzle saves older than STORAGE_RETENTION_DAYS
+ */
+function cleanupOldSaves() {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - STORAGE_RETENTION_DAYS);
+    const cutoffStr = cutoffDate.toISOString().split('T')[0];
+    
+    const keysToRemove = [];
+    
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(STORAGE_PREFIX) && !key.startsWith('yen-doku-best-')) {
+            // Extract date from key: yen-doku-{date}-{difficulty}
+            const match = key.match(/yen-doku-(\d{4}-\d{2}-\d{2})/);
+            if (match) {
+                const saveDate = match[1];
+                if (saveDate < cutoffStr) {
+                    keysToRemove.push(key);
+                }
+            }
+        }
+    }
+    
+    keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+        console.log('🗑️ Cleaned up old save:', key);
+    });
+    
+    if (keysToRemove.length > 0) {
+        console.log(`🧹 Cleaned up ${keysToRemove.length} old puzzle saves`);
+    }
 }
 
 // ===== DOM =====
@@ -400,14 +435,16 @@ async function loadPuzzle(date, difficulty, variant = 1, isFallback = false) {
 }
 
 async function load(difficulty) {
-    // Check for saved game for today's puzzle at this difficulty
-    const todayDate = today();
-    const saved = loadSavedGame(todayDate, difficulty);
+    // Preserve current date when switching difficulty, default to today for fresh load
+    const targetDate = state.puzzle ? state.puzzle.date : today();
+    
+    // Check for saved game for this puzzle at new difficulty
+    const saved = loadSavedGame(targetDate, difficulty);
     if (saved) {
-        console.log('🔄 Resuming saved game for', difficulty);
+        console.log('🔄 Resuming saved game for', targetDate, difficulty);
         return resumeGame(saved);
     }
-    return loadPuzzle(todayDate, difficulty);
+    return loadPuzzle(targetDate, difficulty);
 }
 
 /**
@@ -749,9 +786,15 @@ function hint() {
     render();
     saveGame();
     
-    // Animate
+    // Animate hint cell
     const cells = el.grid.querySelectorAll('.cell');
     cells[row * 9 + col].classList.add('hint-reveal');
+    
+    // Animate hint button with glow effect
+    el.btnHint.classList.add('hint-active');
+    setTimeout(() => {
+        el.btnHint.classList.remove('hint-active');
+    }, 800);
     
     toast('💡 Hint revealed');
     checkWin();
@@ -1122,6 +1165,9 @@ function onKey(e) {
 
 // ===== Init =====
 function init() {
+    // Clean up old puzzle saves (older than 7 days)
+    cleanupOldSaves();
+    
     // Grid cell clicks (event delegation)
     el.grid.addEventListener('click', (e) => {
         const cell = e.target.closest('.cell');
@@ -1150,6 +1196,22 @@ function init() {
     el.btnReveal.onclick = revealSolution;
     el.btnUndo.onclick = undo;
     el.btnReset.onclick = reset;
+    
+    // Tooltip dismiss on click (fixes sticky tooltips on touch devices)
+    document.querySelectorAll('.tool[data-tooltip]').forEach(tool => {
+        tool.addEventListener('click', function() {
+            const tooltip = this.dataset.tooltip;
+            this.removeAttribute('data-tooltip');
+            setTimeout(() => {
+                this.dataset.tooltip = tooltip;
+            }, 100);
+        });
+        
+        // For touch devices, clear hover state
+        tool.addEventListener('touchend', function() {
+            this.blur();
+        });
+    });
     
     // Date navigation
     el.prevDay.onclick = goToPrevDay;

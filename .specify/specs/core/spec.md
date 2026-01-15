@@ -283,7 +283,9 @@ As a returning user, I can browse puzzles from previous days so that I can solve
 - **FR-025f**: UI MUST default to extreme difficulty on initial page load
 - **FR-025g**: UI MUST display a difficulty selector (dropdown, tabs, or buttons)
 - **FR-025h**: Difficulty selector MUST show all 4 levels: Easy, Medium, Hard, Extreme
-- **FR-025i**: UI MUST load the selected difficulty's puzzle for today's date
+- **FR-025i**: UI MUST load the selected difficulty's puzzle for the **currently displayed date** (not always today)
+- **FR-025i-a**: When navigating to a historical date and switching difficulty, UI MUST preserve the current date
+- **FR-025i-b**: Fresh page load (no date in URL) MUST default to today's date
 - **FR-025j**: UI MUST show confirmation if user has unsaved progress before switching
 - **FR-025k**: UI MUST persist last selected difficulty in localStorage
 - **FR-025l**: UI MUST gracefully handle missing puzzles for a difficulty level
@@ -301,6 +303,10 @@ As a returning user, I can browse puzzles from previous days so that I can solve
 - **NFR-003**: Page load MUST complete in <2 seconds on 3G connection
 - **NFR-004**: UI MUST be responsive (mobile-friendly)
 - **NFR-005**: System MUST operate indefinitely without manual intervention
+- **NFR-006**: localStorage SHOULD automatically clear puzzle saves older than 7 days on app init
+- **NFR-007**: Pencil marks MUST NOT cause grid cells to shift or resize when added/removed
+- **NFR-008**: Toolbar tooltips MUST auto-dismiss after button action on touch devices
+- **NFR-009**: Hint button SHOULD provide visual glow/shine feedback when hint is revealed
 
 ---
 
