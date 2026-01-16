@@ -76,7 +76,7 @@ Each overlap shares a **3×3 box**:
 - [x] Timer and game state persistence per puzzle mode
 
 ### FR-5: Navigation
-- [ ] New page accessible from home (deferred to separate spec)
+- [x] New page accessible from home ("Try Gattai Puzzles →" link in footer)
 - [x] Mode selector on Gattai page
 - [x] Difficulty selector per mode
 
@@ -93,17 +93,16 @@ Each overlap shares a **3×3 box**:
   "difficulty": "easy|medium|hard|extreme",
   "clueCount": 34-180,
   "version": "1.0",
-  "grids": [
-    {
-      "id": "grid-0",
+  "grids": {
+    "primary": {
       "grid": [[0-9 x9]],
-      "solution": [[1-9 x9]],
-      "position": {"row": 0, "col": 0}
+      "solution": [[1-9 x9]]
+    },
+    "secondary": {
+      "grid": [[0-9 x9]],
+      "solution": [[1-9 x9]]
     }
-  ],
-  "overlaps": [
-    {"grid1": "grid-0", "grid2": "grid-1", "type": "3x3"}
-  ]
+  }
 }
 ```
 

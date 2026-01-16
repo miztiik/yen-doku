@@ -317,6 +317,34 @@ function isOverlappingCell(modeId, gridId, row, col) {
 // ===== Puzzle Loading =====
 
 /**
+ * Check if a puzzle exists for a given date/mode/difficulty (HEAD request)
+ */
+async function puzzleExists(date, mode, difficulty) {
+    const yr = year(date);
+    const url = `puzzles/${yr}/gattai/${mode}/${difficulty}/${date}-001.json`;
+    try {
+        const res = await fetch(url, { method: 'HEAD' });
+        return res.ok;
+    } catch (e) {
+        return false;
+    }
+}
+
+/**
+ * Find the most recent available puzzle by probing backwards
+ */
+async function findLatestPuzzle(startDate, mode, difficulty, maxDays = 7) {
+    let date = startDate;
+    for (let i = 0; i < maxDays; i++) {
+        if (await puzzleExists(date, mode, difficulty)) {
+            return date;
+        }
+        date = yesterday(date);
+    }
+    return null;
+}
+
+/**
  * Load a Gattai puzzle from the server
  */
 async function loadGattaiPuzzle(date, mode, difficulty) {
@@ -1664,8 +1692,17 @@ async function loadPuzzle() {
     } catch (error) {
         console.error('loadPuzzle error:', error);
         console.error('State:', { date: state.date, mode: state.mode, difficulty: state.difficulty });
+        
+        // Smart fallback: try to find the most recent available puzzle
+        const latestDate = await findLatestPuzzle(yesterday(state.date), state.mode, state.difficulty);
+        if (latestDate) {
+            state.date = latestDate;
+            updateUrl(state.mode, state.difficulty, state.date);
+            return loadPuzzle(); // Retry with fallback date
+        }
+        
         el.container.innerHTML = ''; // Clear any partial render
-        showError(`Puzzle not available for ${formatDate(state.date)}`);
+        showError(`No ${GATTAI_MODES[state.mode].displayName} puzzles available`);
     }
 }
 
