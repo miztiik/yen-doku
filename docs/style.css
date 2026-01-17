@@ -1331,6 +1331,21 @@ main {
     background: var(--bg-secondary);
 }
 
+.home-link {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-tertiary);
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: var(--radius-full);
+    transition: all 0.2s var(--ease);
+}
+
+.home-link:hover {
+    color: var(--primary);
+    background: var(--bg-secondary);
+}
+
 .repo-link {
     display: inline-flex;
     align-items: center;

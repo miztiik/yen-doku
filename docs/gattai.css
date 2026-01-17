@@ -332,6 +332,12 @@
     pointer-events: none;
 }
 
+/* Hidden overlap cells (non-canonical duplicates) */
+.gattai-grid .cell.overlap-hidden {
+    visibility: hidden;
+    pointer-events: none;
+}
+
 /* Selected cell */
 .gattai-grid .cell.selected {
     background: var(--cell-selected);

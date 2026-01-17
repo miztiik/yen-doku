@@ -395,8 +395,13 @@ function createGridElement(gridId, gridData, position, modeId) {
             
             // Check if this is an overlapping cell
             const cellKey = `${gridId}-${row}-${col}`;
-            if (overlapMap.has(cellKey)) {
+            const overlapInfo = overlapMap.get(cellKey);
+            if (overlapInfo) {
                 cellEl.classList.add('shared');
+                // Hide non-canonical cells (they're duplicates of canonical grid's cells)
+                if (!overlapInfo.isCanonical) {
+                    cellEl.classList.add('overlap-hidden');
+                }
             }
             
             // Add box border classes
