@@ -332,18 +332,13 @@
     pointer-events: none;
 }
 
-/* Hidden overlap cells (non-canonical duplicates) 
- * These cells exist in the DOM for data consistency but should be invisible.
- * Using visibility:hidden preserves layout, opacity:0 ensures no visual,
- * pointer-events:none prevents interaction, position makes it not occupy space visually.
- */
-.gattai-grid .cell.overlap-hidden {
-    visibility: hidden !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-    background: transparent !important;
-    border-color: transparent !important;
-    color: transparent !important;
+/* Placeholder for non-canonical overlap cells (completely transparent) */
+.gattai-grid .cell-placeholder {
+    /* Invisible placeholder to maintain CSS grid layout */
+    visibility: hidden;
+    background: transparent;
+    border: none;
+    pointer-events: none;
 }
 
 /* Selected cell */

@@ -379,6 +379,18 @@ function createGridElement(gridId, gridData, position, modeId) {
     
     for (let row = 0; row < 9; row++) {
         for (let col = 0; col < 9; col++) {
+            // Check if this is a non-canonical overlapping cell (duplicate)
+            const cellKey = `${gridId}-${row}-${col}`;
+            const overlapInfo = overlapMap.get(cellKey);
+            
+            // Skip non-canonical overlap cells entirely - use empty placeholder
+            if (overlapInfo && !overlapInfo.isCanonical) {
+                const placeholder = document.createElement('div');
+                placeholder.className = 'cell-placeholder';
+                gridEl.appendChild(placeholder);
+                continue;
+            }
+            
             const cellEl = document.createElement('div');
             cellEl.className = 'cell';
             cellEl.dataset.gridId = gridId;
@@ -393,15 +405,9 @@ function createGridElement(gridId, gridData, position, modeId) {
                 cellEl.textContent = value;
             }
             
-            // Check if this is an overlapping cell
-            const cellKey = `${gridId}-${row}-${col}`;
-            const overlapInfo = overlapMap.get(cellKey);
-            if (overlapInfo) {
+            // Mark canonical overlap cells as shared
+            if (overlapInfo && overlapInfo.isCanonical) {
                 cellEl.classList.add('shared');
-                // Hide non-canonical cells (they're duplicates of canonical grid's cells)
-                if (!overlapInfo.isCanonical) {
-                    cellEl.classList.add('overlap-hidden');
-                }
             }
             
             // Add box border classes
