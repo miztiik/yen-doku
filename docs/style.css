@@ -1372,3 +1372,158 @@ main {
 .repo-link:hover svg {
     opacity: 1;
 }
+/* ===== Completion Badge & Next Challenge (T044-T047) ===== */
+
+/* T044: Completion badge styles */
+.completion-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    margin: var(--space-md) auto;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.1));
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: var(--radius-md);
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--success);
+    max-width: fit-content;
+}
+
+.completion-badge .badge-icon {
+    font-size: 18px;
+}
+
+.completion-badge .badge-text {
+    font-size: 14px;
+}
+
+/* T045: Next challenge suggestion styles */
+.next-challenge {
+    display: flex;
+    gap: var(--space-sm);
+    justify-content: center;
+    margin-top: var(--space-md);
+    flex-wrap: wrap;
+}
+
+.btn-play-again,
+.btn-next-difficulty {
+    padding: 10px 20px;
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.btn-play-again {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+}
+
+.btn-play-again:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+}
+
+.btn-next-difficulty {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+}
+
+.btn-next-difficulty:hover {
+    background: var(--bg-tertiary);
+    transform: translateY(-1px);
+}
+
+/* T046: Rank badge and best times list styles */
+.rank-badge {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: var(--space-sm);
+    text-align: center;
+}
+
+.best-times-list {
+    margin-top: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    min-width: 180px;
+}
+
+.best-times-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-sm);
+    text-align: center;
+}
+
+.best-time-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-family: var(--font-mono);
+    font-size: 14px;
+}
+
+.best-time-row.current {
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.best-time-rank {
+    font-size: 16px;
+}
+
+.best-time-value {
+    color: var(--text-secondary);
+}
+
+.best-time-row.current .best-time-value {
+    color: var(--accent);
+}
+
+/* T047: Completed grid styling */
+.grid.completed .cell {
+    opacity: 0.85;
+    pointer-events: none;
+}
+
+.grid.completed .cell.user {
+    color: var(--success);
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+    .completion-badge {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.15));
+        border-color: rgba(34, 197, 94, 0.4);
+    }
+    
+    .btn-next-difficulty {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+    
+    .btn-next-difficulty:hover {
+        background: rgba(255, 255, 255, 0.15);
+    }
+    
+    .best-times-list {
+        background: rgba(255, 255, 255, 0.05);
+    }
+}

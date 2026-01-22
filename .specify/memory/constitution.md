@@ -3,31 +3,21 @@
 
 <!--
 === Sync Impact Report ===
-Version change: 1.1.0 → 1.2.0
-Bump rationale: MINOR - Added 3 new principles (VI-VIII), expanded guidance, added UX/Storage contracts
+Version change: 1.2.0 → 1.3.0
+Bump rationale: MINOR - Expanded Storage Contract with new key patterns for completion records, best times array format, gattai keys, and timer pause state
 
-Modified principles:
-- Principle I: "Correctness First" → Added explicit rationale
-- Principle II: "Technology Separation" → Reformatted for clarity
-- Principle III: "Static-First Architecture" → Added file path detail
-- Principle IV: "Test-Driven Validation" → Added manual script clause
-- Principle V: "Simplicity & Single Responsibility" → Added no-framework list
+Modified sections:
+- Storage Contract: Added completion record keys, gattai keys, best times array format
+- Storage Contract: Added elapsedBeforePause to Saved Game Data
+- Storage Contract: Added Completion Record Data subsection
+- Storage Contract: Updated Lifecycle with tab hidden save trigger, 30-day completion cleanup, best times retention
 
 Added sections:
-- Principle VI: "Clarity Over Cleverness" (from DESIGN_PRINCIPLES.md §2)
-- Principle VII: "Offline-First & User Respect" (from DESIGN_PRINCIPLES.md §7-8)
-- Principle VIII: "Fail Fast, Fail Loud" (from DESIGN_PRINCIPLES.md §9)
-- UX Contract section (from system-design.md §10)
-- Storage Contract section (from system-design.md §10)
-- Success Criteria section (from system-design.md §13)
-- Explicit Non-Goals section (from system-design.md §4)
-- Amendment Procedure with semver rules
+- None (expanded existing Storage Contract)
 
 Removed sections: None
 
-Templates requiring updates:
-- .specify/specs/core/spec.md: ⚠ pending review for NFR alignment
-- .specify/templates/: ✅ no updates required
+Templates requiring updates: None
 
 Follow-up TODOs: None
 -->
@@ -165,20 +155,32 @@ Every puzzle **MUST** have exactly one solution. Validation failures block commi
 
 ### localStorage Keys
 - **Game state**: `yen-doku-{date}-{difficulty}` (e.g., `yen-doku-2026-01-15-extreme`)
-- **Best times**: `yen-doku-best-{difficulty}`
+- **Best times**: `yen-doku-best-times-{difficulty}` (array of top 3: `[{time, date, achievedAt}]`)
+- **Completion records**: `yen-doku-completed-{date}-{difficulty}` (e.g., `yen-doku-completed-2026-01-15-extreme`)
+- **Gattai game state**: `yen-doku-gattai-{date}-{mode}-{difficulty}`
+- **Gattai best times**: `yen-doku-gattai-best-times-{mode}-{difficulty}`
+- **Gattai completion**: `yen-doku-gattai-completed-{date}-{mode}-{difficulty}`
 - All keys MUST be prefixed with `yen-doku-`
 
 ### Saved Game Data
 - `grid` — Current 9×9 cell values
 - `pencil` — Pencil marks per cell (arrays from Sets)
 - `startTime` — Timer start timestamp
+- `elapsedBeforePause` — Accumulated time from previous sessions (for pause/resume)
 - `history` — Undo stack (limited to 50 entries)
 
+### Completion Record Data
+- `completedAt` — Unix timestamp when puzzle was completed
+- `time` — Elapsed solving time in milliseconds
+- `date` — Puzzle date for display
+
 ### Lifecycle
-- Save: After each move (enter, erase, hint, undo)
+- Save: After each move (enter, erase, hint, undo) and on tab hidden
 - Load: On puzzle load, restore if exists
 - Clear: On victory, reveal, or explicit reset
-- Cleanup: Saves older than 7 days deleted on app init
+- Cleanup: Game saves older than 7 days deleted on app init
+- Cleanup: Completion records older than 30 days deleted on app init
+- Best times: Persist indefinitely (no cleanup)
 
 ---
 
@@ -222,4 +224,4 @@ All code reviews MUST verify compliance with these principles.
 
 ---
 
-**Version**: 1.2.0 | **Ratified**: 2026-01-11 | **Last Amended**: 2026-01-15
+**Version**: 1.3.0 | **Ratified**: 2026-01-11 | **Last Amended**: 2026-01-22

@@ -1,0 +1,36 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "BestTimesArray",
+    "description": "Array of top 3 best times for a difficulty level",
+    "type": "array",
+    "minItems": 0,
+    "maxItems": 3,
+    "items": {
+        "type": "object",
+        "required": ["time", "date", "achievedAt"],
+        "additionalProperties": false,
+        "properties": {
+            "time": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Solving time in milliseconds"
+            },
+            "date": {
+                "type": "string",
+                "description": "Puzzle date (YYYY-MM-DD) or 'legacy' for migrated times"
+            },
+            "achievedAt": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Unix timestamp (ms) when this time was achieved"
+            }
+        }
+    },
+    "examples": [
+        [
+            { "time": 225000, "date": "2026-01-22", "achievedAt": 1737561600000 },
+            { "time": 240000, "date": "2026-01-20", "achievedAt": 1737388800000 },
+            { "time": 273000, "date": "2026-01-18", "achievedAt": 1737216000000 }
+        ]
+    ]
+}

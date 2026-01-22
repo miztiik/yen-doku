@@ -105,6 +105,11 @@ const state = {
 const STORAGE_PREFIX = 'yen-doku-gattai-';
 const STORAGE_RETENTION_DAYS = 7;
 const MAX_HISTORY = 50;
+// T035: Best times and completion storage key prefixes for gattai
+const BEST_TIMES_PREFIX = 'yen-doku-gattai-best-times-';
+const COMPLETION_PREFIX = 'yen-doku-gattai-completed-';
+// T035: Completion records are cleaned up after 30 days
+const COMPLETION_RETENTION_DAYS = 30;
 
 // ===== DOM Helpers =====
 const $ = (sel) => document.querySelector(sel);
@@ -210,10 +215,149 @@ function getStorageKey(date, mode, difficulty) {
 }
 
 /**
- * Get best time storage key
+ * Get best time storage key (legacy - single value)
  */
 function getBestTimeKey(mode, difficulty) {
     return `${STORAGE_PREFIX}best-${mode}-${difficulty}`;
+}
+
+// ===== Best Times Functions (T038) =====
+
+/**
+ * T038: Get the localStorage key for best times array
+ */
+function getBestTimesKey(mode, difficulty) {
+    return `${BEST_TIMES_PREFIX}${mode}-${difficulty}`;
+}
+
+/**
+ * T038: Get top 3 best times for a mode/difficulty
+ * @returns {Array<{ms: number, date: string|null}>}
+ */
+function getBestTimes(mode, difficulty) {
+    try {
+        const key = getBestTimesKey(mode, difficulty);
+        const saved = localStorage.getItem(key);
+        if (!saved) return [];
+        const times = JSON.parse(saved);
+        return Array.isArray(times) ? times : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+/**
+ * T038: Save a new best time, keeping top 3 only
+ * @returns {number|null} Rank (1, 2, or 3) if made leaderboard, null otherwise
+ */
+function saveBestTime(mode, difficulty, ms, date = null) {
+    try {
+        const key = getBestTimesKey(mode, difficulty);
+        const times = getBestTimes(mode, difficulty);
+        
+        // Add new time
+        times.push({ ms, date: date || state.date || null });
+        
+        // Sort by time ascending (fastest first)
+        times.sort((a, b) => a.ms - b.ms);
+        
+        // Keep only top 3
+        const top3 = times.slice(0, 3);
+        
+        // Find rank of the new time
+        const rank = top3.findIndex(t => t.ms === ms && t.date === (date || state.date || null));
+        
+        localStorage.setItem(key, JSON.stringify(top3));
+        
+        // Return rank (1-indexed) if in top 3, null otherwise
+        return rank !== -1 ? rank + 1 : null;
+    } catch (e) {
+        // T050: Handle localStorage quota exceeded
+        if (e.name === 'QuotaExceededError' || e.code === 22) {
+            console.error('localStorage quota exceeded:', e);
+            showToast('Storage full - best time not saved');
+        } else {
+            console.warn('Failed to save best time:', e);
+        }
+        return null;
+    }
+}
+
+/**
+ * T038: Get single best time for backward compatibility
+ * @returns {number|null} Best time in ms, or null if no times recorded
+ */
+function getBestTime(mode, difficulty) {
+    const times = getBestTimes(mode, difficulty);
+    return times.length > 0 ? times[0].ms : null;
+}
+
+// ===== Completion Functions (T040) =====
+
+/**
+ * T040: Get the localStorage key for a completion record
+ */
+function getCompletionKey(date, mode, difficulty) {
+    return `${COMPLETION_PREFIX}${date}-${mode}-${difficulty}`;
+}
+
+/**
+ * T040: Save a completion record
+ */
+function saveCompletion(date, mode, difficulty, timeMs) {
+    try {
+        const key = getCompletionKey(date, mode, difficulty);
+        const record = {
+            date,
+            mode,
+            difficulty,
+            timeMs,
+            completedAt: Date.now()
+        };
+        localStorage.setItem(key, JSON.stringify(record));
+        console.log('🏆 Saved completion:', key);
+    } catch (e) {
+        // T050: Handle localStorage quota exceeded
+        if (e.name === 'QuotaExceededError' || e.code === 22) {
+            console.error('localStorage quota exceeded:', e);
+            showToast('Storage full - completion not saved');
+        } else {
+            console.warn('Failed to save completion:', e);
+        }
+    }
+}
+
+/**
+ * T040: Get a completion record
+ */
+function getCompletion(date, mode, difficulty) {
+    try {
+        const key = getCompletionKey(date, mode, difficulty);
+        const saved = localStorage.getItem(key);
+        return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+/**
+ * T040: Clear a completion record (for Play Again)
+ */
+function clearCompletion(date, mode, difficulty) {
+    try {
+        const key = getCompletionKey(date, mode, difficulty);
+        localStorage.removeItem(key);
+        console.log('🗑️ Cleared completion:', key);
+    } catch (e) {
+        console.warn('Failed to clear completion:', e);
+    }
+}
+
+/**
+ * T040: Check if a puzzle is completed
+ */
+function isCompleted(date, mode, difficulty) {
+    return getCompletion(date, mode, difficulty) !== null;
 }
 
 // ===== URL Parameter Parsing =====
@@ -930,6 +1074,55 @@ function stopTimer() {
 }
 
 /**
+ * T036: Pause the timer - accumulate elapsed time and clear startTime
+ */
+function pauseTimer() {
+    if (!state.startTime) return; // Already paused
+    
+    // Accumulate elapsed time
+    state.elapsedBeforePause = getElapsedTime();
+    state.startTime = null;
+    
+    // Stop the display interval
+    stopTimer();
+    
+    console.log('⏸️ Timer paused at', formatElapsedTime(state.elapsedBeforePause));
+}
+
+/**
+ * T036: Resume the timer - set a new startTime to continue from
+ */
+function resumeTimer() {
+    if (state.startTime) return; // Already running
+    if (state.revealed) return; // Don't resume if puzzle is revealed
+    
+    state.startTime = Date.now();
+    
+    // Restart the display interval
+    if (!state.timerInterval) {
+        state.timerInterval = setInterval(updateTimerDisplay, 1000);
+    }
+    updateTimerDisplay();
+    
+    console.log('▶️ Timer resumed');
+}
+
+/**
+ * T037: Handle visibility change events for automatic pause/resume
+ */
+function handleVisibilityChange() {
+    if (document.hidden) {
+        pauseTimer();
+        saveGameState(); // Save state when tab is hidden
+    } else {
+        // Only resume if we have an active puzzle and it's not completed/revealed
+        if (state.puzzle && !state.revealed) {
+            resumeTimer();
+        }
+    }
+}
+
+/**
  * Update timer display
  */
 function updateTimerDisplay() {
@@ -943,7 +1136,7 @@ function updateTimerDisplay() {
  * Get current elapsed time
  */
 function getElapsedTime() {
-    if (!state.startTime) return 0;
+    if (!state.startTime) return state.elapsedBeforePause;
     return state.elapsedBeforePause + (Date.now() - state.startTime);
 }
 
@@ -1056,6 +1249,73 @@ function cleanupOldSaves() {
     });
 }
 
+/**
+ * T043: Migrate old best time format (single value) to new format (array of top 3)
+ */
+function migrateBestTimes() {
+    const OLD_BEST_PREFIX = 'yen-doku-gattai-best-';
+    const modes = Object.keys(GATTAI_MODES);
+    const difficulties = ['easy', 'medium', 'hard', 'extreme'];
+    
+    for (const mode of modes) {
+        for (const difficulty of difficulties) {
+            const oldKey = `${OLD_BEST_PREFIX}${mode}-${difficulty}`;
+            const newKey = getBestTimesKey(mode, difficulty);
+            
+            try {
+                const oldValue = localStorage.getItem(oldKey);
+                const newValue = localStorage.getItem(newKey);
+                
+                // Only migrate if old key exists and new key doesn't
+                if (oldValue && !newValue) {
+                    const ms = parseInt(oldValue, 10);
+                    if (!isNaN(ms)) {
+                        const migrated = [{ ms, date: null }];
+                        localStorage.setItem(newKey, JSON.stringify(migrated));
+                        localStorage.removeItem(oldKey);
+                        console.log(`🔄 Migrated best time for ${mode}/${difficulty}: ${ms}ms`);
+                    }
+                }
+            } catch (e) {
+                console.warn(`Failed to migrate best time for ${mode}/${difficulty}:`, e);
+            }
+        }
+    }
+}
+
+/**
+ * T043: Clean up completion records older than COMPLETION_RETENTION_DAYS
+ */
+function cleanupOldCompletions() {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - COMPLETION_RETENTION_DAYS);
+    const cutoffStr = cutoffDate.toISOString().split('T')[0];
+    
+    const keysToRemove = [];
+    
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(COMPLETION_PREFIX)) {
+            const match = key.match(/yen-doku-gattai-completed-(\d{4}-\d{2}-\d{2})/);
+            if (match) {
+                const completionDate = match[1];
+                if (completionDate < cutoffStr) {
+                    keysToRemove.push(key);
+                }
+            }
+        }
+    }
+    
+    keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+        console.log('🗑️ Cleaned up old completion:', key);
+    });
+    
+    if (keysToRemove.length > 0) {
+        console.log(`🧹 Cleaned up ${keysToRemove.length} old completion records`);
+    }
+}
+
 // ===== Victory Detection =====
 
 /**
@@ -1157,7 +1417,7 @@ function createConfetti() {
 }
 
 /**
- * Show victory modal with stats
+ * Show victory modal with stats (T039: Updated with rank display)
  */
 function showVictoryModal() {
     const elapsed = getElapsedTime();
@@ -1165,42 +1425,55 @@ function showVictoryModal() {
     const modeName = GATTAI_MODES[state.mode].displayName;
     const difficulty = state.difficulty.charAt(0).toUpperCase() + state.difficulty.slice(1);
     
-    // Check if new best time
-    const bestKey = getBestTimeKey(state.mode, state.difficulty);
-    const currentBest = localStorage.getItem(bestKey);
-    const isNewBest = !currentBest || elapsed < parseInt(currentBest, 10);
+    // T039: Save best time and get rank
+    const rank = saveBestTime(state.mode, state.difficulty, elapsed);
+    const bestTimes = getBestTimes(state.mode, state.difficulty);
     
-    if (isNewBest) {
-        localStorage.setItem(bestKey, elapsed.toString());
-    }
+    // T039: Rank badge emoji
+    const rankBadges = { 1: '🥇', 2: '🥈', 3: '🥉' };
+    const rankBadge = rank ? rankBadges[rank] : null;
     
-    const bestTime = localStorage.getItem(bestKey);
-    const bestStr = bestTime ? formatElapsedTime(parseInt(bestTime, 10)) : timeStr;
+    // T039: Rank display
+    const rankHtml = rankBadge 
+        ? `<div class="rank-badge">${rankBadge} ${rank === 1 ? 'New Record!' : `#${rank} Best Time!`}</div>`
+        : '';
+    
+    // T039: Mini leaderboard HTML
+    const leaderboardHtml = bestTimes.length > 0 ? `
+        <div class="best-times-list">
+            <div class="best-times-title">Best Times</div>
+            ${bestTimes.map((t, i) => `
+                <div class="best-time-row ${t.ms === elapsed ? 'current' : ''}">
+                    <span class="best-time-rank">${rankBadges[i + 1] || '#' + (i + 1)}</span>
+                    <span class="best-time-value">${formatElapsedTime(t.ms)}</span>
+                </div>
+            `).join('')}
+        </div>
+    ` : '';
     
     // Clear saved game
     const key = getStorageKey(state.date, state.mode, state.difficulty);
     localStorage.removeItem(key);
     
-    // Best time display
-    const bestTimeHtml = isNewBest 
-        ? '<div class="best-time new-best">⭐ New Best!</div>'
-        : `<div class="best-time">Best: ${bestStr}</div>`;
+    // Save completion record
+    saveCompletion(state.date, state.mode, state.difficulty, elapsed);
     
     const content = `
         <div class="victory-content">
             <div class="victory-icon">🏆</div>
             <h2 class="victory-title">Puzzle Complete!</h2>
+            ${rankHtml}
             <div class="victory-stats">
                 <div class="stat stat-hero">
                     <span class="stat-value">${timeStr}</span>
                     <span class="stat-label">Time</span>
-                    ${bestTimeHtml}
                 </div>
                 <div class="stat">
                     <span class="stat-value">${modeName}</span>
                     <span class="stat-label">${difficulty}</span>
                 </div>
             </div>
+            ${leaderboardHtml}
             <button class="victory-btn" onclick="closeVictoryModal()">Continue</button>
         </div>
     `;
@@ -1230,6 +1503,149 @@ function closeVictoryModal() {
 
 // Make closeVictoryModal available globally for onclick
 window.closeVictoryModal = closeVictoryModal;
+
+// ===== Completion UI Functions (T042) =====
+
+/**
+ * T042: Show a completed puzzle with solution and badge
+ */
+async function showCompletedPuzzle(completion) {
+    try {
+        const puzzle = await loadGattaiPuzzle(state.date, state.mode, state.difficulty);
+        state.puzzle = puzzle;
+        
+        // Initialize grids with solution
+        state.currentGrids = {};
+        state.pencilMarks = {};
+        for (const [gridId, gridData] of Object.entries(puzzle.grids)) {
+            state.currentGrids[gridId] = gridData.solution.map(row => [...row]);
+            state.pencilMarks[gridId] = Array.from({ length: 9 }, () =>
+                Array.from({ length: 9 }, () => new Set())
+            );
+        }
+        
+        state.history = [];
+        state.selectedCell = null;
+        state.selectedGrid = null;
+        state.elapsedBeforePause = completion.timeMs;
+        state.startTime = null; // Timer stopped
+        state.revealed = false; // Not "revealed" - completed
+        
+        // Render puzzle
+        renderGattaiPuzzle(puzzle);
+        
+        // Update displays
+        for (const gridId of Object.keys(state.puzzle.grids)) {
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    updateCellDisplay(gridId, row, col);
+                }
+            }
+        }
+        
+        // Update UI
+        el.date.textContent = formatDate(state.date);
+        el.container.classList.add('completed'); // Mark as completed
+        updateUndoButton();
+        
+        // Show completion badge and next challenge
+        showCompletionBadge(completion.timeMs);
+        showNextChallengeSuggestion();
+        
+    } catch (e) {
+        console.error('Failed to show completed puzzle:', e);
+        // Fallback: clear the invalid completion and load fresh
+        clearCompletion(state.date, state.mode, state.difficulty);
+        loadPuzzle();
+    }
+}
+
+/**
+ * T042: Show the completion badge
+ */
+function showCompletionBadge(timeMs) {
+    // Remove any existing badge
+    hideCompletionBadge();
+    
+    const badge = document.createElement('div');
+    badge.className = 'completion-badge';
+    badge.id = 'completion-badge';
+    badge.innerHTML = `
+        <span class="badge-icon">✓</span>
+        <span class="badge-text">Completed in ${formatElapsedTime(timeMs)}</span>
+    `;
+    
+    // Insert after the container
+    el.container.parentNode.insertBefore(badge, el.container.nextSibling);
+}
+
+/**
+ * T042: Hide the completion badge
+ */
+function hideCompletionBadge() {
+    const badge = document.getElementById('completion-badge');
+    if (badge) badge.remove();
+}
+
+/**
+ * T042: Show next challenge suggestion
+ */
+function showNextChallengeSuggestion() {
+    // Remove any existing suggestion
+    hideNextChallengeSuggestion();
+    
+    const difficulties = ['easy', 'medium', 'hard', 'extreme'];
+    const currentIndex = difficulties.indexOf(state.difficulty);
+    const nextDifficulty = currentIndex < difficulties.length - 1 
+        ? difficulties[currentIndex + 1] 
+        : null;
+    
+    const suggestion = document.createElement('div');
+    suggestion.className = 'next-challenge';
+    suggestion.id = 'next-challenge';
+    
+    let nextHtml = `<button class="btn-play-again" onclick="playAgain()">Play Again</button>`;
+    if (nextDifficulty) {
+        const nextLabel = nextDifficulty.charAt(0).toUpperCase() + nextDifficulty.slice(1);
+        nextHtml += `<button class="btn-next-difficulty" onclick="switchDifficulty('${nextDifficulty}')">Try ${nextLabel}</button>`;
+    }
+    
+    suggestion.innerHTML = nextHtml;
+    
+    // Insert after the completion badge or container
+    const badge = document.getElementById('completion-badge');
+    const insertAfter = badge || el.container;
+    insertAfter.parentNode.insertBefore(suggestion, insertAfter.nextSibling);
+}
+
+/**
+ * T042: Hide next challenge suggestion
+ */
+function hideNextChallengeSuggestion() {
+    const suggestion = document.getElementById('next-challenge');
+    if (suggestion) suggestion.remove();
+}
+
+/**
+ * T042: Play Again - clear completion and reset puzzle
+ */
+function playAgain() {
+    // Clear the completion record
+    clearCompletion(state.date, state.mode, state.difficulty);
+    
+    // Hide completion UI
+    hideCompletionBadge();
+    hideNextChallengeSuggestion();
+    
+    // Remove completed class
+    el.container.classList.remove('completed');
+    
+    // Reset the puzzle state
+    doReset();
+}
+
+// Make playAgain available globally for onclick
+window.playAgain = playAgain;
 
 // ===== Hint =====
 
@@ -1361,6 +1777,41 @@ function revealSolution() {
 // ===== Reset =====
 
 /**
+ * Actual reset logic - used by both resetPuzzle and playAgain
+ */
+function doReset() {
+    // Clear completion record if puzzle was completed
+    if (isCompleted(state.date, state.mode, state.difficulty)) {
+        clearCompletion(state.date, state.mode, state.difficulty);
+        hideCompletionBadge();
+        hideNextChallengeSuggestion();
+        el.container.classList.remove('completed');
+    }
+    
+    initializeCurrentGrids(state.puzzle);
+    state.history = [];
+    state.revealed = false;
+    state.startTime = Date.now();
+    state.elapsedBeforePause = 0;
+    
+    // Re-render all cells
+    for (const gridId of Object.keys(state.puzzle.grids)) {
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                updateCellDisplay(gridId, row, col);
+            }
+        }
+    }
+    
+    updateConflictDisplay();
+    updateUndoButton();
+    startTimer();
+    saveGameState();
+    selectCell(null, null, null);
+    showToast('Puzzle reset');
+}
+
+/**
  * Reset the puzzle to initial state
  */
 function resetPuzzle() {
@@ -1370,28 +1821,7 @@ function resetPuzzle() {
         message: 'This will clear all your progress.',
         confirmText: 'Reset',
         cancelText: 'Cancel',
-        onConfirm: () => {
-            initializeCurrentGrids(state.puzzle);
-            state.history = [];
-            state.revealed = false;
-            state.startTime = Date.now();
-            state.elapsedBeforePause = 0;
-            
-            // Re-render all cells
-            for (const gridId of Object.keys(state.puzzle.grids)) {
-                for (let row = 0; row < 9; row++) {
-                    for (let col = 0; col < 9; col++) {
-                        updateCellDisplay(gridId, row, col);
-                    }
-                }
-            }
-            
-            updateConflictDisplay();
-            updateUndoButton();
-            startTimer();
-            saveGameState();
-            selectCell(null, null, null);
-        }
+        onConfirm: doReset
     });
 }
 
@@ -1656,12 +2086,19 @@ function handleDateNav(direction) {
 // ===== Initialization =====
 
 /**
- * Load and display a puzzle
+ * Load and display a puzzle (T041: Updated with completion check)
  */
 async function loadPuzzle() {
     hideError();
     selectCell(null, null, null);
     stopTimer();
+    
+    // T041: Check if puzzle is already completed
+    const completion = getCompletion(state.date, state.mode, state.difficulty);
+    if (completion) {
+        console.log('🏆 Loading completed puzzle:', state.date, state.mode, state.difficulty);
+        return showCompletedPuzzle(completion);
+    }
     
     try {
         const puzzle = await loadGattaiPuzzle(state.date, state.mode, state.difficulty);
@@ -1815,6 +2252,18 @@ function init() {
     
     // Clean up old saves
     cleanupOldSaves();
+    
+    // T043: Migration and cleanup for new features
+    migrateBestTimes();
+    cleanupOldCompletions();
+    
+    // T049: Graceful fallback for Page Visibility API
+    // T037: Page Visibility API for timer pause/resume
+    if (typeof document.hidden !== 'undefined') {
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+    } else {
+        console.log('⚠️ Page Visibility API not supported - timer will continue when tab is hidden');
+    }
     
     // Load puzzle
     loadPuzzle();
