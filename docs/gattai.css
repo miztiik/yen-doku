@@ -9,6 +9,9 @@
     --gattai-cell-size: min(28px, calc((100vw - 48px) / 21));
     --gattai-cell-size-twin: min(36px, calc((100vw - 48px) / 15));
     
+    /* Grid spacing - used in container size calculations */
+    --grid-gap: 0px;
+    
     /* Grid line colors - light mode */
     --gattai-outer-border: rgba(0, 0, 0, 0.4);
     --gattai-inner-line: rgba(0, 0, 0, 0.08);
@@ -235,8 +238,8 @@
 /* Samurai mode: 21×21 logical grid */
 .gattai-container.mode-samurai {
     --cell-size: var(--gattai-cell-size);
-    width: calc(var(--cell-size) * 21 + var(--grid-gap) * 4);
-    height: calc(var(--cell-size) * 21 + var(--grid-gap) * 4);
+    width: calc(var(--cell-size) * 21);
+    height: calc(var(--cell-size) * 21);
 }
 
 /* Twin modes: 15×15 logical grid */
@@ -245,8 +248,8 @@
 .gattai-container.mode-twin-sw,
 .gattai-container.mode-twin-se {
     --cell-size: var(--gattai-cell-size-twin);
-    width: calc(var(--cell-size) * 15 + var(--grid-gap) * 2);
-    height: calc(var(--cell-size) * 15 + var(--grid-gap) * 2);
+    width: calc(var(--cell-size) * 15);
+    height: calc(var(--cell-size) * 15);
 }
 
 /* ===== Individual 9×9 Grid ===== */
