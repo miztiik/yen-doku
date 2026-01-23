@@ -9,20 +9,18 @@
     --gattai-cell-size: min(28px, calc((100vw - 48px) / 21));
     --gattai-cell-size-twin: min(36px, calc((100vw - 48px) / 15));
     
-    /* Shared cell styling */
-    --shared-bg: rgba(124, 58, 237, 0.08);
-    --shared-border: rgba(124, 58, 237, 0.4);
-    
-    /* Grid gaps */
-    --grid-gap: 2px;
-    --box-border: 2px;
+    /* Grid line colors - light mode */
+    --gattai-outer-border: rgba(0, 0, 0, 0.4);
+    --gattai-inner-line: rgba(0, 0, 0, 0.08);
+    --gattai-box-line: rgba(0, 0, 0, 0.2);
 }
 
-/* Dark mode adjustments */
+/* Dark mode - inverted for contrast */
 @media (prefers-color-scheme: dark) {
     :root {
-        --shared-bg: rgba(124, 58, 237, 0.15);
-        --shared-border: rgba(124, 58, 237, 0.6);
+        --gattai-outer-border: rgba(255, 255, 255, 0.5);
+        --gattai-inner-line: rgba(255, 255, 255, 0.1);
+        --gattai-box-line: rgba(255, 255, 255, 0.25);
     }
 }
 
@@ -257,11 +255,11 @@
     display: grid;
     grid-template-columns: repeat(9, var(--cell-size));
     grid-template-rows: repeat(9, var(--cell-size));
-    /* Background shows through gap as subtle grid lines */
-    background: var(--border);
-    gap: 1px;
+    /* Crystalline outer border */
+    border: 1px solid var(--gattai-outer-border);
     border-radius: var(--radius-sm);
     overflow: hidden;
+    background: var(--bg-elevated);
     box-shadow: var(--shadow-sm);
     transition: box-shadow 0.2s var(--ease), transform 0.2s var(--ease);
     z-index: 1;
@@ -291,12 +289,25 @@
     font-weight: 500;
     color: var(--cell-user);
     background: var(--cell-empty-bg);
-    /* No borders - gap with background color creates grid lines */
+    /* Subtle inner borders - right and bottom only to avoid doubling */
     border: none;
+    border-right: 1px solid var(--gattai-inner-line);
+    border-bottom: 1px solid var(--gattai-inner-line);
     cursor: pointer;
     user-select: none;
     transition: background 0.15s var(--ease), transform 0.1s var(--ease);
     position: relative;
+    box-sizing: border-box;
+}
+
+/* Remove right border on last column */
+.gattai-grid .cell[data-col="8"] {
+    border-right: none;
+}
+
+/* Remove bottom border on last row */
+.gattai-grid .cell[data-row="8"] {
+    border-bottom: none;
 }
 
 /* Given cells */
@@ -305,84 +316,22 @@
     font-weight: 600;
 }
 
-/* Box borders - use box-shadow for cleaner lines without doubling */
-/* Single edge classes */
-.gattai-grid .cell.box-top:not(.box-left):not(.box-right):not(.box-bottom) {
-    box-shadow: inset 0 2px 0 0 var(--border-strong);
+/* 3x3 Box separators - same weight (1px) but more contrast */
+/* Cells at row 3 and 6 get top border for horizontal separators */
+.gattai-grid .cell[data-row="3"],
+.gattai-grid .cell[data-row="6"] {
+    border-top: 1px solid var(--gattai-box-line);
 }
 
-.gattai-grid .cell.box-left:not(.box-top):not(.box-right):not(.box-bottom) {
-    box-shadow: inset 2px 0 0 0 var(--border-strong);
+/* Cells at col 3 and 6 get left border for vertical separators */
+.gattai-grid .cell[data-col="3"],
+.gattai-grid .cell[data-col="6"] {
+    border-left: 1px solid var(--gattai-box-line);
 }
 
-.gattai-grid .cell.box-bottom:not(.box-top):not(.box-left):not(.box-right) {
-    box-shadow: inset 0 -2px 0 0 var(--border-strong);
-}
-
-.gattai-grid .cell.box-right:not(.box-top):not(.box-left):not(.box-bottom) {
-    box-shadow: inset -2px 0 0 0 var(--border-strong);
-}
-
-/* Two edges - adjacent */
-.gattai-grid .cell.box-top.box-left:not(.box-right):not(.box-bottom) {
-    box-shadow: inset 2px 0 0 0 var(--border-strong), inset 0 2px 0 0 var(--border-strong);
-}
-
-.gattai-grid .cell.box-top.box-right:not(.box-left):not(.box-bottom) {
-    box-shadow: inset -2px 0 0 0 var(--border-strong), inset 0 2px 0 0 var(--border-strong);
-}
-
-.gattai-grid .cell.box-bottom.box-left:not(.box-top):not(.box-right) {
-    box-shadow: inset 2px 0 0 0 var(--border-strong), inset 0 -2px 0 0 var(--border-strong);
-}
-
-.gattai-grid .cell.box-bottom.box-right:not(.box-top):not(.box-left) {
-    box-shadow: inset -2px 0 0 0 var(--border-strong), inset 0 -2px 0 0 var(--border-strong);
-}
-
-/* Two edges - opposite */
-.gattai-grid .cell.box-top.box-bottom:not(.box-left):not(.box-right) {
-    box-shadow: inset 0 2px 0 0 var(--border-strong), inset 0 -2px 0 0 var(--border-strong);
-}
-
-.gattai-grid .cell.box-left.box-right:not(.box-top):not(.box-bottom) {
-    box-shadow: inset 2px 0 0 0 var(--border-strong), inset -2px 0 0 0 var(--border-strong);
-}
-
-/* Three edges */
-.gattai-grid .cell.box-top.box-left.box-right:not(.box-bottom) {
-    box-shadow: inset 2px 0 0 0 var(--border-strong), inset -2px 0 0 0 var(--border-strong), inset 0 2px 0 0 var(--border-strong);
-}
-
-.gattai-grid .cell.box-top.box-left.box-bottom:not(.box-right) {
-    box-shadow: inset 2px 0 0 0 var(--border-strong), inset 0 2px 0 0 var(--border-strong), inset 0 -2px 0 0 var(--border-strong);
-}
-
-.gattai-grid .cell.box-top.box-right.box-bottom:not(.box-left) {
-    box-shadow: inset -2px 0 0 0 var(--border-strong), inset 0 2px 0 0 var(--border-strong), inset 0 -2px 0 0 var(--border-strong);
-}
-
-.gattai-grid .cell.box-bottom.box-left.box-right:not(.box-top) {
-    box-shadow: inset 2px 0 0 0 var(--border-strong), inset -2px 0 0 0 var(--border-strong), inset 0 -2px 0 0 var(--border-strong);
-}
-
-/* All four edges */
-.gattai-grid .cell.box-top.box-left.box-right.box-bottom {
-    box-shadow: inset 2px 0 0 0 var(--border-strong), inset -2px 0 0 0 var(--border-strong), inset 0 2px 0 0 var(--border-strong), inset 0 -2px 0 0 var(--border-strong);
-}
-
-/* Shared cells (overlapping region) - use pseudo-element to avoid shadow conflicts */
+/* Shared/overlap cells - NO special highlighting, just normal cells */
 .gattai-grid .cell.shared {
-    background: var(--shared-bg);
-}
-
-.gattai-grid .cell.shared::before {
-    content: '';
-    position: absolute;
-    inset: 2px;
-    border: 1px solid var(--shared-border);
-    border-radius: 2px;
-    pointer-events: none;
+    /* No special styling - overlap region looks like regular cells */
 }
 
 /* Placeholder for non-canonical overlap cells (completely transparent) */
@@ -532,31 +481,28 @@
     
     .gattai-container {
         box-shadow: none;
-        border: 2px solid black;
     }
     
     .gattai-grid {
         box-shadow: none;
-        background: #999;
         border: 2px solid black;
     }
     
     .gattai-grid .cell {
         background: white;
+        border-color: #ccc;
     }
     
-    .gattai-grid .cell.box-top,
-    .gattai-grid .cell.box-left,
-    .gattai-grid .cell.box-bottom,
-    .gattai-grid .cell.box-right {
-        box-shadow: none;
+    /* 3x3 separators in print */
+    .gattai-grid .cell[data-row="3"],
+    .gattai-grid .cell[data-row="6"] {
+        border-top-color: black;
     }
     
-    /* Print box borders using outline */
-    .gattai-grid .cell.box-top { box-shadow: inset 0 2px 0 0 black; }
-    .gattai-grid .cell.box-left { box-shadow: inset 2px 0 0 0 black; }
-    .gattai-grid .cell.box-bottom { box-shadow: inset 0 -2px 0 0 black; }
-    .gattai-grid .cell.box-right { box-shadow: inset -2px 0 0 0 black; }
+    .gattai-grid .cell[data-col="3"],
+    .gattai-grid .cell[data-col="6"] {
+        border-left-color: black;
+    }
 }
 
 /* ===== Reduced Motion ===== */
