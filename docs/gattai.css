@@ -257,7 +257,9 @@
     display: grid;
     grid-template-columns: repeat(9, var(--cell-size));
     grid-template-rows: repeat(9, var(--cell-size));
-    background: var(--bg-elevated);
+    /* Background shows through gap as subtle grid lines */
+    background: var(--border);
+    gap: 1px;
     border-radius: var(--radius-sm);
     overflow: hidden;
     box-shadow: var(--shadow-sm);
@@ -289,7 +291,8 @@
     font-weight: 500;
     color: var(--cell-user);
     background: var(--cell-empty-bg);
-    border: 1px solid var(--border);
+    /* No borders - gap with background color creates grid lines */
+    border: none;
     cursor: pointer;
     user-select: none;
     transition: background 0.15s var(--ease), transform 0.1s var(--ease);
@@ -302,33 +305,83 @@
     font-weight: 600;
 }
 
-/* Box borders */
-.gattai-grid .cell.box-top {
-    border-top: var(--box-border) solid var(--border-strong);
+/* Box borders - use box-shadow for cleaner lines without doubling */
+/* Single edge classes */
+.gattai-grid .cell.box-top:not(.box-left):not(.box-right):not(.box-bottom) {
+    box-shadow: inset 0 2px 0 0 var(--border-strong);
 }
 
-.gattai-grid .cell.box-left {
-    border-left: var(--box-border) solid var(--border-strong);
+.gattai-grid .cell.box-left:not(.box-top):not(.box-right):not(.box-bottom) {
+    box-shadow: inset 2px 0 0 0 var(--border-strong);
 }
 
-.gattai-grid .cell.box-bottom {
-    border-bottom: var(--box-border) solid var(--border-strong);
+.gattai-grid .cell.box-bottom:not(.box-top):not(.box-left):not(.box-right) {
+    box-shadow: inset 0 -2px 0 0 var(--border-strong);
 }
 
-.gattai-grid .cell.box-right {
-    border-right: var(--box-border) solid var(--border-strong);
+.gattai-grid .cell.box-right:not(.box-top):not(.box-left):not(.box-bottom) {
+    box-shadow: inset -2px 0 0 0 var(--border-strong);
 }
 
-/* Shared cells (overlapping region) */
+/* Two edges - adjacent */
+.gattai-grid .cell.box-top.box-left:not(.box-right):not(.box-bottom) {
+    box-shadow: inset 2px 0 0 0 var(--border-strong), inset 0 2px 0 0 var(--border-strong);
+}
+
+.gattai-grid .cell.box-top.box-right:not(.box-left):not(.box-bottom) {
+    box-shadow: inset -2px 0 0 0 var(--border-strong), inset 0 2px 0 0 var(--border-strong);
+}
+
+.gattai-grid .cell.box-bottom.box-left:not(.box-top):not(.box-right) {
+    box-shadow: inset 2px 0 0 0 var(--border-strong), inset 0 -2px 0 0 var(--border-strong);
+}
+
+.gattai-grid .cell.box-bottom.box-right:not(.box-top):not(.box-left) {
+    box-shadow: inset -2px 0 0 0 var(--border-strong), inset 0 -2px 0 0 var(--border-strong);
+}
+
+/* Two edges - opposite */
+.gattai-grid .cell.box-top.box-bottom:not(.box-left):not(.box-right) {
+    box-shadow: inset 0 2px 0 0 var(--border-strong), inset 0 -2px 0 0 var(--border-strong);
+}
+
+.gattai-grid .cell.box-left.box-right:not(.box-top):not(.box-bottom) {
+    box-shadow: inset 2px 0 0 0 var(--border-strong), inset -2px 0 0 0 var(--border-strong);
+}
+
+/* Three edges */
+.gattai-grid .cell.box-top.box-left.box-right:not(.box-bottom) {
+    box-shadow: inset 2px 0 0 0 var(--border-strong), inset -2px 0 0 0 var(--border-strong), inset 0 2px 0 0 var(--border-strong);
+}
+
+.gattai-grid .cell.box-top.box-left.box-bottom:not(.box-right) {
+    box-shadow: inset 2px 0 0 0 var(--border-strong), inset 0 2px 0 0 var(--border-strong), inset 0 -2px 0 0 var(--border-strong);
+}
+
+.gattai-grid .cell.box-top.box-right.box-bottom:not(.box-left) {
+    box-shadow: inset -2px 0 0 0 var(--border-strong), inset 0 2px 0 0 var(--border-strong), inset 0 -2px 0 0 var(--border-strong);
+}
+
+.gattai-grid .cell.box-bottom.box-left.box-right:not(.box-top) {
+    box-shadow: inset 2px 0 0 0 var(--border-strong), inset -2px 0 0 0 var(--border-strong), inset 0 -2px 0 0 var(--border-strong);
+}
+
+/* All four edges */
+.gattai-grid .cell.box-top.box-left.box-right.box-bottom {
+    box-shadow: inset 2px 0 0 0 var(--border-strong), inset -2px 0 0 0 var(--border-strong), inset 0 2px 0 0 var(--border-strong), inset 0 -2px 0 0 var(--border-strong);
+}
+
+/* Shared cells (overlapping region) - use pseudo-element to avoid shadow conflicts */
 .gattai-grid .cell.shared {
     background: var(--shared-bg);
 }
 
-.gattai-grid .cell.shared::after {
+.gattai-grid .cell.shared::before {
     content: '';
     position: absolute;
-    inset: 0;
+    inset: 2px;
     border: 1px solid var(--shared-border);
+    border-radius: 2px;
     pointer-events: none;
 }
 
@@ -484,18 +537,26 @@
     
     .gattai-grid {
         box-shadow: none;
+        background: #999;
+        border: 2px solid black;
     }
     
     .gattai-grid .cell {
-        border-color: #999;
+        background: white;
     }
     
     .gattai-grid .cell.box-top,
     .gattai-grid .cell.box-left,
     .gattai-grid .cell.box-bottom,
     .gattai-grid .cell.box-right {
-        border-color: black;
+        box-shadow: none;
     }
+    
+    /* Print box borders using outline */
+    .gattai-grid .cell.box-top { box-shadow: inset 0 2px 0 0 black; }
+    .gattai-grid .cell.box-left { box-shadow: inset 2px 0 0 0 black; }
+    .gattai-grid .cell.box-bottom { box-shadow: inset 0 -2px 0 0 black; }
+    .gattai-grid .cell.box-right { box-shadow: inset -2px 0 0 0 black; }
 }
 
 /* ===== Reduced Motion ===== */
@@ -625,20 +686,24 @@
 }
 
 .best-times-list {
-    margin-top: var(--space-md);
-    padding: var(--space-sm) var(--space-md);
+    margin-top: var(--space-lg);
+    margin-bottom: var(--space-lg);
+    padding: var(--space-md) var(--space-lg);
     background: var(--bg-secondary);
-    border-radius: var(--radius-md);
-    min-width: 180px;
+    border-radius: var(--radius-lg);
+    min-width: 200px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .best-times-title {
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 700;
     color: var(--text-tertiary);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: var(--space-sm);
+    letter-spacing: 0.1em;
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     text-align: center;
 }
 
@@ -646,14 +711,23 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 4px 0;
+    padding: 8px 4px;
     font-family: var(--font-mono);
     font-size: 14px;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s ease;
+}
+
+.best-time-row:not(:last-child) {
+    margin-bottom: 4px;
 }
 
 .best-time-row.current {
     color: var(--accent);
     font-weight: 600;
+    background: rgba(124, 58, 237, 0.1);
+    padding-left: 8px;
+    padding-right: 8px;
 }
 
 .best-time-rank {
