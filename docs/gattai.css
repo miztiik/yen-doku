@@ -5,10 +5,6 @@
 
 /* ===== Gattai-Specific Variables ===== */
 :root {
-    /* Cell sizing */
-    --gattai-cell-size: min(28px, calc((100vw - 48px) / 21));
-    --gattai-cell-size-twin: min(36px, calc((100vw - 48px) / 15));
-    
     /* Grid spacing - used in container size calculations */
     --grid-gap: 0px;
     
@@ -16,6 +12,17 @@
     --gattai-outer-border: rgba(0, 0, 0, 0.4);
     --gattai-inner-line: rgba(0, 0, 0, 0.08);
     --gattai-box-line: rgba(0, 0, 0, 0.2);
+    
+    /* 
+     * Cell sizing - CRITICAL for mobile rendering
+     * These are calculated based on viewport and logical grid size.
+     * Default values assume Samurai mode (21x21 logical grid).
+     * JavaScript sets --logical-cols and --logical-rows per mode.
+     */
+    --gattai-padding: 16px;
+    --gattai-max-cell: 32px;
+    /* Cell size = min(max cell size, (viewport - padding) / logical columns) */
+    --gattai-cell-size: min(var(--gattai-max-cell), calc((100vw - var(--gattai-padding) * 2) / var(--logical-cols, 21)));
 }
 
 /* Dark mode - inverted for contrast */
@@ -221,6 +228,8 @@
     justify-content: center;
     align-items: center;
     padding: var(--space-md);
+    width: 100%;
+    /* Allow scrolling if puzzle is larger than viewport (shouldn't happen with proper sizing) */
     overflow: auto;
     -webkit-overflow-scrolling: touch;
 }
@@ -228,56 +237,51 @@
 /* ===== Gattai Grid Container ===== */
 .gattai-container {
     position: relative;
-    display: grid;
-    background: var(--border);
+    display: block;
+    /* Transparent background - only the grids themselves should have background */
+    background: transparent;
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
     touch-action: pan-x pan-y pinch-zoom;
-}
-
-/* Samurai mode: 21×21 logical grid */
-.gattai-container.mode-samurai {
-    --cell-size: var(--gattai-cell-size);
-    width: calc(var(--cell-size) * 21);
-    height: calc(var(--cell-size) * 21);
-}
-
-/* Twin modes: 15×15 logical grid */
-.gattai-container.mode-twin-nw,
-.gattai-container.mode-twin-ne,
-.gattai-container.mode-twin-sw,
-.gattai-container.mode-twin-se {
-    --cell-size: var(--gattai-cell-size-twin);
-    width: calc(var(--cell-size) * 15);
-    height: calc(var(--cell-size) * 15);
+    
+    /* 
+     * EXPLICIT PIXEL-BASED SIZING - Required for mobile compatibility
+     * The container size is calculated from cell size × logical grid dimensions.
+     * This avoids the aspect-ratio + container-query issues on mobile browsers.
+     */
+    width: calc(var(--gattai-cell-size) * var(--logical-cols, 21));
+    height: calc(var(--gattai-cell-size) * var(--logical-rows, 21));
+    
+    /* Center the container */
+    margin: 0 auto;
 }
 
 /* ===== Individual 9×9 Grid ===== */
 .gattai-grid {
     position: absolute;
     display: grid;
-    grid-template-columns: repeat(9, var(--cell-size));
-    grid-template-rows: repeat(9, var(--cell-size));
-    /* Crystalline outer border */
-    border: 1px solid var(--gattai-outer-border);
-    border-radius: var(--radius-sm);
-    overflow: hidden;
+    grid-template-columns: repeat(9, 1fr);
+    grid-template-rows: repeat(9, 1fr);
+    /* 
+     * NO border on the grid itself - cells handle all borders.
+     * This prevents double-borders and misalignment at overlaps.
+     */
+    overflow: visible;
     background: var(--bg-elevated);
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow 0.2s var(--ease), transform 0.2s var(--ease);
     z-index: 1;
-}
 
-/* Position grids based on CSS custom properties set by JS */
-.gattai-grid {
-    top: calc(var(--grid-row) * var(--cell-size));
-    left: calc(var(--grid-col) * var(--cell-size));
+    /* 
+     * PIXEL-BASED POSITIONING - Required for mobile compatibility
+     * Grid position = grid's starting row/col × cell size
+     */
+    width: calc(var(--gattai-cell-size) * 9);
+    height: calc(var(--gattai-cell-size) * 9);
+    left: calc(var(--grid-col) * var(--gattai-cell-size));
+    top: calc(var(--grid-row) * var(--gattai-cell-size));
 }
 
 /* Active grid elevation */
 .gattai-grid.active {
     z-index: 10;
-    box-shadow: var(--shadow-lg), 0 0 0 2px var(--accent);
 }
 
 /* ===== Cell Styles ===== */
@@ -285,51 +289,85 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: var(--cell-size);
-    height: var(--cell-size);
+    width: 100%;
+    height: 100%;
     font-family: var(--font-mono);
-    font-size: calc(var(--cell-size) * 0.55);
+    
+    /* Font size based on cell size - works on all browsers */
+    font-size: calc(var(--gattai-cell-size) * 0.55);
+    
     font-weight: 500;
     color: var(--cell-user);
     background: var(--cell-empty-bg);
-    /* Subtle inner borders - right and bottom only to avoid doubling */
-    border: none;
-    border-right: 1px solid var(--gattai-inner-line);
-    border-bottom: 1px solid var(--gattai-inner-line);
+    
+    /* 
+     * ALL cells have ALL borders - creates complete grid lines.
+     * Using box-sizing ensures borders don't cause overflow.
+     * Inner lines are subtle, outer/box lines are more visible.
+     */
+    box-sizing: border-box;
+    border: 1px solid var(--gattai-inner-line);
+    
     cursor: pointer;
     user-select: none;
-    transition: background 0.15s var(--ease), transform 0.1s var(--ease);
+    transition: background 0.15s var(--ease);
     position: relative;
-    box-sizing: border-box;
+    
+    /* Ensure content doesn't overflow */
+    overflow: hidden;
 }
 
-/* Remove right border on last column */
-.gattai-grid .cell[data-col="8"] {
-    border-right: none;
+/* 3x3 Box separators - stronger borders at box boundaries */
+.gattai-grid .cell[data-row="0"] {
+    border-top-color: var(--gattai-box-line);
+}
+.gattai-grid .cell[data-row="3"],
+.gattai-grid .cell[data-row="6"] {
+    border-top-color: var(--gattai-box-line);
+}
+.gattai-grid .cell[data-col="0"] {
+    border-left-color: var(--gattai-box-line);
+}
+.gattai-grid .cell[data-col="3"],
+.gattai-grid .cell[data-col="6"] {
+    border-left-color: var(--gattai-box-line);
 }
 
-/* Remove bottom border on last row */
+/* Outer edges of each 9x9 grid - strong border */
 .gattai-grid .cell[data-row="8"] {
-    border-bottom: none;
+    border-bottom-color: var(--gattai-box-line);
+}
+.gattai-grid .cell[data-col="8"] {
+    border-right-color: var(--gattai-box-line);
+}
+
+/* Reserve space for pencil marks */
+.gattai-grid .cell.has-pencil {
+    padding: 2%;
+}
+
+.pencil-marks {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    width: 100%;
+    height: 100%;
+}
+
+.pencil-mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(var(--gattai-cell-size) * 0.25);
+    font-weight: 400;
+    color: var(--text-tertiary);
+    line-height: 1;
 }
 
 /* Given cells */
 .gattai-grid .cell.given {
     color: var(--cell-given);
     font-weight: 600;
-}
-
-/* 3x3 Box separators - same weight (1px) but more contrast */
-/* Cells at row 3 and 6 get top border for horizontal separators */
-.gattai-grid .cell[data-row="3"],
-.gattai-grid .cell[data-row="6"] {
-    border-top: 1px solid var(--gattai-box-line);
-}
-
-/* Cells at col 3 and 6 get left border for vertical separators */
-.gattai-grid .cell[data-col="3"],
-.gattai-grid .cell[data-col="6"] {
-    border-left: 1px solid var(--gattai-box-line);
 }
 
 /* Shared/overlap cells - NO special highlighting, just normal cells */
@@ -349,7 +387,6 @@
 /* Selected cell */
 .gattai-grid .cell.selected {
     background: var(--cell-selected);
-    transform: scale(1.02);
     z-index: 5;
 }
 
@@ -368,52 +405,14 @@
     color: var(--cell-user);
 }
 
-/* ===== Pencil Marks ===== */
-.gattai-grid .cell.has-pencil {
-    padding: 0;
-}
-
-.pencil-marks {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    width: 100%;
-    height: 100%;
-}
-
-.pencil-mark {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(var(--cell-size) * 0.25);
-    font-weight: 400;
-    color: var(--text-tertiary);
-    line-height: 1;
-}
-
 /* ===== Responsive Adjustments ===== */
 
-/* Large screens */
-@media (min-width: 1024px) {
-    :root {
-        --gattai-cell-size: 32px;
-        --gattai-cell-size-twin: 40px;
-    }
-}
-
-/* Medium screens (tablet) */
-@media (min-width: 768px) and (max-width: 1023px) {
-    :root {
-        --gattai-cell-size: 28px;
-        --gattai-cell-size-twin: 36px;
-    }
-}
-
-/* Small screens (mobile) */
+/* Mobile optimizations */
 @media (max-width: 767px) {
     :root {
-        --gattai-cell-size: min(22px, calc((100vw - 32px) / 21));
-        --gattai-cell-size-twin: min(30px, calc((100vw - 32px) / 15));
+        /* Reduce padding on mobile to maximize puzzle size */
+        --gattai-padding: 8px;
+        --gattai-max-cell: 28px;
     }
     
     .mode-tabs {
@@ -434,7 +433,7 @@
     }
     
     .gattai-main {
-        padding: var(--space-sm);
+        padding: var(--space-xs);
     }
     
     .timer {
@@ -445,8 +444,9 @@
 /* Very small screens */
 @media (max-width: 400px) {
     :root {
-        --gattai-cell-size: min(18px, calc((100vw - 16px) / 21));
-        --gattai-cell-size-twin: min(26px, calc((100vw - 16px) / 15));
+        /* Minimal padding on very small screens */
+        --gattai-padding: 4px;
+        --gattai-max-cell: 24px;
     }
     
     .mode-label {
@@ -461,9 +461,12 @@
 /* ===== Touch Device Optimizations ===== */
 @media (hover: none) and (pointer: coarse) {
     .gattai-grid .cell {
-        /* Larger touch targets */
-        min-width: 32px;
-        min-height: 32px;
+        /* 
+         * REMOVED min-width/min-height - they caused overflow on small screens.
+         * Cell size is now controlled entirely by --gattai-cell-size which
+         * is calculated from viewport width, ensuring cells always fit.
+         */
+        touch-action: manipulation;
     }
     
     .gattai-grid .cell:active {
