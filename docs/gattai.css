@@ -21,6 +21,7 @@
      */
     --gattai-padding: 16px;
     --gattai-max-cell: 32px;
+    --gattai-controls-gap: var(--space-sm);
     /* Cell size = min(max cell size, (viewport - padding) / logical columns) */
     --gattai-cell-size: min(var(--gattai-max-cell), calc((100vw - var(--gattai-padding) * 2) / var(--logical-cols, 21)));
 }
@@ -37,6 +38,14 @@
 /* ===== Gattai App Container ===== */
 .gattai-app {
     max-width: 100%;
+}
+
+.gattai-controls {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--gattai-controls-gap);
 }
 
 .gattai-app header h1 {
@@ -71,7 +80,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: var(--space-md);
+    margin-bottom: 0;
     width: 100%;
     max-width: min(580px, 95vmin);
 }
@@ -98,9 +107,9 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    padding: 10px 16px;
-    min-width: 70px;
-    font-size: 13px;
+    padding: 8px 14px;
+    min-width: 64px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--text-secondary);
     border-radius: var(--radius-full);
@@ -227,11 +236,68 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: var(--space-md);
+    padding: var(--space-sm);
     width: 100%;
     /* Allow scrolling if puzzle is larger than viewport (shouldn't happen with proper sizing) */
     overflow: auto;
     -webkit-overflow-scrolling: touch;
+}
+
+@media (min-width: 900px) {
+    :root {
+        --gattai-padding: 10px;
+        --gattai-max-cell: 42px;
+        --gattai-controls-gap: 6px;
+    }
+
+    .gattai-app {
+        max-width: 1200px;
+    }
+
+    header h1 {
+        font-size: 36px;
+        letter-spacing: 3px;
+    }
+
+    .date-nav {
+        margin-top: 0;
+    }
+
+    .gattai-controls {
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: var(--space-md);
+    }
+
+    .mode-picker,
+    .difficulty-picker {
+        max-width: none;
+        width: auto;
+    }
+
+    .mode-tabs,
+    .difficulty-tabs {
+        padding: 3px;
+        gap: 1px;
+    }
+
+    .difficulty-tabs .tab {
+        padding: 8px 16px 7px;
+        min-width: 72px;
+        font-size: 12px;
+    }
+
+    .subtitle {
+        font-size: 10px;
+    }
+}
+
+@media (min-width: 1200px) {
+    :root {
+        --gattai-max-cell: 48px;
+        --gattai-padding: 8px;
+    }
 }
 
 /* ===== Gattai Grid Container ===== */

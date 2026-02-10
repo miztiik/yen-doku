@@ -24,53 +24,55 @@
             </div>
         </header>
 
-        <!-- Mode Selector -->
-        <nav class="mode-picker">
-            <div class="mode-tabs" role="tablist" aria-label="Puzzle mode selection">
-                <button data-mode="twin-nw" class="mode-tab active" role="tab" aria-selected="true">
-                    <span class="mode-icon twin-icon nw"></span>
-                    <span class="mode-label">Horizon</span>
-                </button>
-                <button data-mode="twin-ne" class="mode-tab" role="tab">
-                    <span class="mode-icon twin-icon ne"></span>
-                    <span class="mode-label">Sunrise</span>
-                </button>
-                <button data-mode="twin-sw" class="mode-tab" role="tab">
-                    <span class="mode-icon twin-icon sw"></span>
-                    <span class="mode-label">Sunset</span>
-                </button>
-                <button data-mode="twin-se" class="mode-tab" role="tab">
-                    <span class="mode-icon twin-icon se"></span>
-                    <span class="mode-label">Eclipse</span>
-                </button>
-                <button data-mode="samurai" class="mode-tab" role="tab">
-                    <span class="mode-icon">⬡</span>
-                    <span class="mode-label">Samurai</span>
-                </button>
-            </div>
-        </nav>
+        <section class="gattai-controls" aria-label="Puzzle settings">
+            <!-- Mode Selector -->
+            <nav class="mode-picker">
+                <div class="mode-tabs" role="tablist" aria-label="Puzzle mode selection">
+                    <button data-mode="twin-nw" class="mode-tab active" role="tab" aria-selected="true">
+                        <span class="mode-icon twin-icon nw"></span>
+                        <span class="mode-label">Horizon</span>
+                    </button>
+                    <button data-mode="twin-ne" class="mode-tab" role="tab">
+                        <span class="mode-icon twin-icon ne"></span>
+                        <span class="mode-label">Sunrise</span>
+                    </button>
+                    <button data-mode="twin-sw" class="mode-tab" role="tab">
+                        <span class="mode-icon twin-icon sw"></span>
+                        <span class="mode-label">Sunset</span>
+                    </button>
+                    <button data-mode="twin-se" class="mode-tab" role="tab">
+                        <span class="mode-icon twin-icon se"></span>
+                        <span class="mode-label">Eclipse</span>
+                    </button>
+                    <button data-mode="samurai" class="mode-tab" role="tab">
+                        <span class="mode-icon">⬡</span>
+                        <span class="mode-label">Samurai</span>
+                    </button>
+                </div>
+            </nav>
 
-        <!-- Difficulty Selector -->
-        <nav class="difficulty-picker">
-            <div class="difficulty-tabs" role="tablist" aria-label="Difficulty selection">
-                <button data-difficulty="easy" data-level="1" class="tab active" role="tab" aria-selected="true">
-                    <span class="tab-label">Easy</span>
-                    <span class="tab-dots"><i></i></span>
-                </button>
-                <button data-difficulty="medium" data-level="2" class="tab" role="tab">
-                    <span class="tab-label">Medium</span>
-                    <span class="tab-dots"><i></i><i></i></span>
-                </button>
-                <button data-difficulty="hard" data-level="3" class="tab" role="tab">
-                    <span class="tab-label">Hard</span>
-                    <span class="tab-dots"><i></i><i></i><i></i></span>
-                </button>
-                <button data-difficulty="extreme" data-level="4" class="tab" role="tab">
-                    <span class="tab-label">Extreme</span>
-                    <span class="tab-dots"><i></i><i></i><i></i><i></i></span>
-                </button>
-            </div>
-        </nav>
+            <!-- Difficulty Selector -->
+            <nav class="difficulty-picker">
+                <div class="difficulty-tabs" role="tablist" aria-label="Difficulty selection">
+                    <button data-difficulty="easy" data-level="1" class="tab active" role="tab" aria-selected="true">
+                        <span class="tab-label">Easy</span>
+                        <span class="tab-dots"><i></i></span>
+                    </button>
+                    <button data-difficulty="medium" data-level="2" class="tab" role="tab">
+                        <span class="tab-label">Medium</span>
+                        <span class="tab-dots"><i></i><i></i></span>
+                    </button>
+                    <button data-difficulty="hard" data-level="3" class="tab" role="tab">
+                        <span class="tab-label">Hard</span>
+                        <span class="tab-dots"><i></i><i></i><i></i></span>
+                    </button>
+                    <button data-difficulty="extreme" data-level="4" class="tab" role="tab">
+                        <span class="tab-label">Extreme</span>
+                        <span class="tab-dots"><i></i><i></i><i></i><i></i></span>
+                    </button>
+                </div>
+            </nav>
+        </section>
 
         <div id="error-message" class="error hidden"></div>
 
