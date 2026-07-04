@@ -1185,6 +1185,7 @@ main {
 .victory-stats {
     display: flex;
     justify-content: center;
+    align-items: baseline;
     gap: 32px;
     margin-bottom: 32px;
 }
@@ -1482,7 +1483,7 @@ main {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 4px;
+    padding: 8px;
     font-family: var(--font-mono);
     font-size: 14px;
     border-radius: var(--radius-sm);
@@ -1497,8 +1498,6 @@ main {
     color: var(--accent);
     font-weight: 600;
     background: rgba(124, 58, 237, 0.1);
-    padding-left: 8px;
-    padding-right: 8px;
 }
 
 .best-time-rank {
