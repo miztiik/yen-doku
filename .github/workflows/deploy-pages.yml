@@ -4,9 +4,13 @@ on:
   push:
     branches: [master]
   workflow_dispatch:
-  # Trigger deployment after Daily Puzzle Generation completes
+  # Trigger deployment after either daily generator completes. Both are watched
+  # because the gattai generator runs ~15 min after the standard one and commits
+  # AFTER the standard-triggered deploy has already checked out master — without
+  # this, each day's gattai puzzles would go live one day late. The "pages"
+  # concurrency group serializes the two resulting deploys.
   workflow_run:
-    workflows: ["Daily Puzzle Generation"]
+    workflows: ["Daily Puzzle Generation", "Daily Gattai Puzzle Generation"]
     types: [completed]
     branches: [master]
 
@@ -20,12 +24,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  # Build stage: produce the "github-pages" artifact exactly once per run.
+  # Deliberately separated from the deploy stage so that re-running a failed
+  # deployment does NOT re-upload the artifact. A re-upload creates a SECOND
+  # "github-pages" artifact under the same run id, which makes
+  # actions/deploy-pages fail with:
+  #   "Multiple artifacts named github-pages were unexpectedly found ..."
+  build:
     # Skip if triggered by failed workflow_run
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -42,6 +49,17 @@ jobs:
         with:
           path: './docs'
 
+  # Deploy stage: consume the artifact built above. This job contains no upload
+  # step, so "Re-run failed jobs" re-runs only this job and reuses the single
+  # existing artifact. Transient Pages errors ("Deployment failed, try again
+  # later") are therefore safely retryable without producing duplicate artifacts.
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
