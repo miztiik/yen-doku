@@ -3,7 +3,7 @@
  * Provides offline support with cache-first strategy for puzzles
  */
 
-const CACHE_NAME = 'yen-doku-v2';
+const CACHE_NAME = 'yen-doku-v3';
 const STATIC_ASSETS = [
     '/',
     '/index.html',

@@ -523,6 +523,18 @@ function hideNextChallengeSuggestion() {
 }
 
 /**
+ * Clear all completion UI: the badge, the next-challenge suggestion, and the
+ * grid's `completed` class. Call this when navigating to a non-completed puzzle
+ * so a prior completed view does not persist (which shrank the grid and left the
+ * cells disabled via pointer-events: none).
+ */
+function resetCompletionUI() {
+    hideCompletionBadge();
+    hideNextChallengeSuggestion();
+    el.grid.classList.remove('completed');
+}
+
+/**
  * T032: Play Again - clear completion and reset puzzle
  */
 function playAgain() {
@@ -804,6 +816,7 @@ async function loadPuzzle(date, difficulty, variant = 1, isFallback = false) {
         el.error.classList.add('hidden');
         el.grid.classList.remove('loading');
         el.grid.classList.remove('revealed'); // Remove revealed state from previous puzzle
+        resetCompletionUI(); // Clear any completion badge/state from a previously completed puzzle
         updateTabs();
         render();
         updateURL();
@@ -871,6 +884,7 @@ async function resumeGame(saved) {
         el.date.textContent = formatDate(puzzle.date);
         el.error.classList.add('hidden');
         el.grid.classList.remove('revealed'); // Ensure clean state
+        resetCompletionUI(); // Clear any completion badge/state from a previously completed puzzle
         updateTabs();
         render();
         updateURL();

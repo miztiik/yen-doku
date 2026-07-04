@@ -302,7 +302,10 @@ header h1 {
 main {
     width: 100%;
     display: flex;
-    justify-content: center;
+    /* Column so completion badge / next-challenge stack BELOW the grid instead
+       of becoming flex-row siblings that squeeze (shrink) the grid. */
+    flex-direction: column;
+    align-items: center;
 }
 
 .grid {
