@@ -23,7 +23,7 @@ const GATTAI_MODES = {
             { grid1: 'center', grid2: 'sw', box1: 6, box2: 2 },
             { grid1: 'center', grid2: 'se', box1: 8, box2: 0 }
         ],
-        gridOrder: ['nw', 'ne', 'center', 'sw', 'se']
+        gridOrder: ['nw', 'ne', 'sw', 'se', 'center']
     },
     'twin-nw': {
         id: 'twin-nw',
@@ -37,7 +37,7 @@ const GATTAI_MODES = {
         overlaps: [
             { grid1: 'primary', grid2: 'secondary', box1: 8, box2: 0 }
         ],
-        gridOrder: ['primary', 'secondary']
+        gridOrder: ['secondary', 'primary']
     },
     'twin-ne': {
         id: 'twin-ne',
@@ -51,7 +51,7 @@ const GATTAI_MODES = {
         overlaps: [
             { grid1: 'primary', grid2: 'secondary', box1: 6, box2: 2 }
         ],
-        gridOrder: ['primary', 'secondary']
+        gridOrder: ['secondary', 'primary']
     },
     'twin-sw': {
         id: 'twin-sw',
@@ -65,7 +65,7 @@ const GATTAI_MODES = {
         overlaps: [
             { grid1: 'primary', grid2: 'secondary', box1: 2, box2: 6 }
         ],
-        gridOrder: ['primary', 'secondary']
+        gridOrder: ['secondary', 'primary']
     },
     'twin-se': {
         id: 'twin-se',
@@ -79,7 +79,7 @@ const GATTAI_MODES = {
         overlaps: [
             { grid1: 'primary', grid2: 'secondary', box1: 0, box2: 8 }
         ],
-        gridOrder: ['primary', 'secondary']
+        gridOrder: ['secondary', 'primary']
     }
 };
 
