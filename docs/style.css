@@ -311,6 +311,7 @@ main {
 .grid {
     display: grid;
     grid-template-columns: repeat(9, 1fr);
+    grid-template-rows: repeat(9, 1fr);
     background: #cbd5e1;
     gap: 1px;
     border-radius: var(--radius-md);
